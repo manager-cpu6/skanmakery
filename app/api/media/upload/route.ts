@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {GridFSBucket} from "mongodb";
-import {getDb,getMongoClient} from "@/lib/mongodb";
+import {getDb} from "@/lib/mongodb";
 import {getSession} from "@/lib/auth";
 
 export const runtime="nodejs";
@@ -15,7 +15,7 @@ export async function POST(req:Request){
   if(file.size>80*1024*1024)return NextResponse.json({error:"Maximum file size is 80MB"},{status:413});
   const allowed=kind==="avatar"?["image/jpeg","image/png","image/webp"]:["video/mp4","video/webm","video/quicktime"];
   if(!allowed.includes(file.type))return NextResponse.json({error:"Unsupported file type"},{status:400});
-  const db=await getDb(),client=await getMongoClient(),bucket=new GridFSBucket(db,{bucketName:"media"});
+  const db=await getDb(),bucket=new GridFSBucket(db,{bucketName:"media"});
   const stream=bucket.openUploadStream(file.name,{metadata:{kind,contentType:file.type,uploadedBy:s.userId}});
   const buf=Buffer.from(await file.arrayBuffer());
   await new Promise<void>((resolve,reject)=>{stream.once("finish",()=>resolve());stream.once("error",reject);stream.end(buf);});
