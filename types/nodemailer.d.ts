@@ -1,1 +1,4 @@
-declare module "nodemailer" {\n  const nodemailer: any;\n  export default nodemailer;\n}\n
+declare module "nodemailer" {
+  const nodemailer: any;
+  export default nodemailer;
+}
