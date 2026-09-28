@@ -9,7 +9,7 @@ export async function POST(req:Request){
  if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
  try{
   const body=await req.json();
-  const {name,type,value,phone,paymentCountry,paymentProvider,paymentPrefix,paymentMode}=body;
+  const {name,type,value,phone,paymentCountry,paymentProvider,paymentPrefix,paymentMode,paymentCurrency}=body;
   if(!name||!type)return NextResponse.json({error:"Missing fields"},{status:400});
 
   let form:any={url:value,text:value,phone:value,email:value,whatsapp:value,ssid:value};
@@ -42,6 +42,7 @@ export async function POST(req:Request){
    paymentProvider:type==="ussd"?paymentProvider:undefined,
    paymentPrefix:type==="ussd"?paymentPrefix:undefined,
    paymentMode:type==="ussd"?(paymentMode||"menu"):undefined,
+   currency:type==="ussd"?paymentCurrency:undefined,
    paymentNumber:type==="ussd"?String(phone||"").replace(/\D/g,""):undefined,
    createdAt:new Date(),updatedAt:new Date()
   });
