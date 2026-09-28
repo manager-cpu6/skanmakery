@@ -1,0 +1,2 @@
+import {redirect} from "next/navigation";import {getSession} from "@/lib/auth";
+export default async function Page(){const s=await getSession();if(!s)redirect("/login");return <main className="main"><div className="container"><h1>QR Management</h1><p style={{color:"#667085"}}>This module is scaffolded for the next implementation stage.</p></div></main>}
