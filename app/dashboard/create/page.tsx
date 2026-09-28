@@ -34,7 +34,8 @@ export default function Create(){
     paymentCountry:selectedCountry?.name||country,
     paymentProvider:selectedProvider?.name||provider,
     paymentPrefix:selectedProvider?.prefix||"",
-    paymentMode:selectedProvider?.mode||"menu"
+    paymentMode:selectedProvider?.mode||"menu",
+    paymentCurrency:selectedProvider?.currency||""
    })
   });
   const d=await r.json();
