@@ -4,7 +4,7 @@ export function makeTarget(type:string,form:Record<string,string>){
  switch(type){
   case "url":{let u=(form.url||"").trim();if(u&&!/^https?:\\/\\//i.test(u))u="https://"+u;return u;}
   case "text":return form.text||"";
-  case "phone":return "tel:"+(form.phone||"").trim();
+  case "phone":{const p=(form.phone||"").trim();return "tel:"+(p.startsWith("*")?p.replace(/#$/,"%23"):p);}
   case "email":return "mailto:"+(form.email||"").trim();
   case "whatsapp":return "https://wa.me/"+(form.whatsapp||"").replace(/\D/g,"");
   case "wifi":return "WIFI:T:"+(form.security||"WPA")+";S:"+(form.ssid||"")+";P:"+(form.password||"")+";;";
