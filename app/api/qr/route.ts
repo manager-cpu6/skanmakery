@@ -8,7 +8,7 @@ export async function POST(req:Request){
  const s=await getSession(); if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
  try{
   const body=await req.json();
-  const {name,type,value,phone,wifiSsid,wifiPassword,wifiSecurity,wifiHidden,paymentCountry,paymentProvider,paymentPrefix,paymentMode,paymentCurrency}=body;
+  const {name,type,value,phone,wifiSsid,wifiPassword,wifiSecurity,wifiHidden,paymentCountry,paymentProvider,paymentPrefix,paymentMode,paymentTemplate,paymentCurrency}=body;
   if(!name||!type)return NextResponse.json({error:"Missing fields"},{status:400});
   const form:any={url:value,text:value,phone:value,email:value,whatsapp:value,ssid:wifiSsid||value,password:wifiPassword||"",security:wifiSecurity||"WPA",hidden:String(Boolean(wifiHidden))};
   if(type==="phone")form.phone=phone||value||"";
@@ -17,8 +17,10 @@ export async function POST(req:Request){
    if(String(wifiSecurity||"WPA")!=="nopass"&&!String(wifiPassword||"").trim())return NextResponse.json({error:"Enter the Wi-Fi password"},{status:400});
   }
   if(type==="ussd"){
-   const n=String(phone||"").replace(/\D/g,""),prefix=String(paymentPrefix||"").trim();
+   const n=String(phone||"").replace(/\D/g,""),prefix=String(paymentPrefix||"").trim(),mode=String(paymentMode||"menu");
    if(!paymentCountry||!paymentProvider||!prefix||!n)return NextResponse.json({error:"Choose country, provider and enter the customer number"},{status:400});
+   if(!["direct","menu","custom"].includes(mode))return NextResponse.json({error:"Invalid payment flow"},{status:400});
+   if((mode==="direct"||mode==="custom")&&!String(paymentTemplate||"").trim())return NextResponse.json({error:"Enter a USSD template or choose Menu flow"},{status:400});
   }
   if(type==="url"&&!value)return NextResponse.json({error:"Enter a website URL"},{status:400});
   if(type==="phone"&&!form.phone)return NextResponse.json({error:"Enter a phone number"},{status:400});
@@ -29,11 +31,9 @@ export async function POST(req:Request){
   const qrPayload=type==="wifi"?target:qrUrl;
   await db.collection("qrcodes").insertOne({
    userId:s.userId,name,type,slug,target,qrUrl,qrPayload,active:true,scanCount:0,
-   wifiSsid:type==="wifi"?String(wifiSsid||""):undefined,
-   wifiSecurity:type==="wifi"?String(wifiSecurity||"WPA"):undefined,
-   wifiHidden:type==="wifi"?Boolean(wifiHidden):undefined,
-   paymentCountry:type==="ussd"?paymentCountry:undefined,paymentProvider:type==="ussd"?paymentProvider:undefined,
-   paymentPrefix:type==="ussd"?paymentPrefix:undefined,paymentMode:type==="ussd"?(paymentMode||"menu"):undefined,
+   wifiSsid:type==="wifi"?String(wifiSsid||""):undefined,wifiSecurity:type==="wifi"?String(wifiSecurity||"WPA"):undefined,wifiHidden:type==="wifi"?Boolean(wifiHidden):undefined,
+   paymentCountry:type==="ussd"?paymentCountry:undefined,paymentProvider:type==="ussd"?paymentProvider:undefined,paymentPrefix:type==="ussd"?paymentPrefix:undefined,
+   paymentMode:type==="ussd"?(paymentMode||"menu"):undefined,paymentTemplate:type==="ussd"?String(paymentTemplate||""):undefined,
    currency:type==="ussd"?paymentCurrency:undefined,paymentNumber:type==="ussd"?String(phone||"").replace(/\D/g,""):undefined,
    createdAt:new Date(),updatedAt:new Date()
   });
