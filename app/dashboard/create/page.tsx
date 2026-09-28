@@ -72,7 +72,7 @@ export default function Create(){
       <div className="payment-grid"><div className="field"><label>Camera</label><select value={cameraFacing} onChange={e=>setCameraFacing(e.target.value as "front"|"back")}><option value="back">Back camera</option><option value="front">Front camera</option></select></div>
       {type==="camera-video"&&<div className="field"><label>Video duration (seconds)</label><input type="number" min={3} max={60} value={videoSeconds} onChange={e=>setVideoSeconds(e.target.value)}/></div>}</div>
       <div className="wifi-note"><span>🔐</span><div><b>Permission is always explicit</b><p>The visitor sees a SkanMakery permission notice and must press Allow before the browser requests camera access.</p></div></div>
-    </>:    {type==="ussd"?<>
+    </>:type==="ussd"?<>
       <div className="payment-section-head"><div><b>🌍 Local payment</b><span>Choose a country and payment service.</span></div></div>
       <div className="payment-grid">
        <div className="field"><label>Country</label><select value={country} onChange={e=>chooseCountry(e.target.value)}>{countries.map(c=><option key={c.code} value={c.code}>{c.flag} {c.name}</option>)}</select></div>
