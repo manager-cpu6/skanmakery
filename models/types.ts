@@ -1,0 +1,2 @@
+export type QRType="url"|"text"|"phone"|"email"|"whatsapp"|"wifi"|"location"|"contact"|"image"|"pdf"|"video";
+export type QRCodeDoc={_id?:string;userId:string;name:string;type:QRType;slug:string;target:string;qrUrl:string;active:boolean;scanCount:number;createdAt:string;updatedAt:string;};
