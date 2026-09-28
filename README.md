@@ -1,0 +1,3 @@
+# SkanMakery
+
+QR platform project.
