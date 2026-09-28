@@ -5,7 +5,7 @@ import {EXTRA_PAYMENT_COUNTRIES} from "@/lib/payment-extra";
 
 const types=[
  ["url","🔗","Website"],["text","📝","Text"],["phone","📞","Phone"],
- ["ussd","💳","Local Payment"],["email","✉️","Email"],["whatsapp","💬","WhatsApp"],
+ ["ussd","💳","Local Payment"],["wifi","📶","Wi‑Fi"],["email","✉️","Email"],["whatsapp","💬","WhatsApp"],
  ["wifi","📶","Wi‑Fi"],["location","📍","Location"],["contact","👤","Contact"]
 ];
 
@@ -13,7 +13,7 @@ const countries=[...PAYMENT_COUNTRIES,...EXTRA_PAYMENT_COUNTRIES];
 
 export default function Create(){
  const [type,setType]=useState("url"),[name,setName]=useState(""),[value,setValue]=useState("");
- const [phone,setPhone]=useState(""),[country,setCountry]=useState("SO"),[provider,setProvider]=useState("zaad-usd");
+ const [phone,setPhone]=useState(""),[country,setCountry]=useState("SO"),[provider,setProvider]=useState("zaad-usd");\n const [wifiSsid,setWifiSsid]=useState(""),[wifiPassword,setWifiPassword]=useState(""),[wifiSecurity,setWifiSecurity]=useState("WPA"),[wifiHidden,setWifiHidden]=useState(false);
  const [qr,setQr]=useState(""),[publicUrl,setPublicUrl]=useState(""),[error,setError]=useState("");
 
  const selectedCountry=useMemo(()=>countries.find(c=>c.code===country)||countries[0],[country]);
@@ -85,13 +85,22 @@ export default function Create(){
       </div>
       <div className="dynamic-amount-note"><span>💡</span><div><b>Amount is not saved in this QR</b><p>When someone scans it, the payment page asks them to enter <b>1, 3, 10</b> or any amount they want.</p></div></div>
       <div className="ussd-preview"><span>Payment flow preview</span><b>{preview}</b><small>{selectedProvider?.mode==="direct"?"The real amount is inserted after scanning.":"This provider opens its USSD menu; the amount is entered there."}</small></div>
+     </> : type==="wifi" ? <>
+      <div className="payment-section-head"><div><b>📶 Instant Wi‑Fi QR</b><span>Scan with the phone camera and let the device offer the network connection.</span></div></div>
+      <div className="field"><label>Wi‑Fi Network Name (SSID)</label><input value={wifiSsid} onChange={e=>setWifiSsid(e.target.value)} placeholder="e.g. SkanMakery Guest" required/></div>
+      <div className="payment-grid">
+       <div className="field"><label>Security</label><select value={wifiSecurity} onChange={e=>setWifiSecurity(e.target.value)}><option value="WPA">WPA / WPA2 / WPA3</option><option value="WEP">WEP</option><option value="nopass">Open / No password</option></select></div>
+       <div className="field"><label>Password</label><input type="password" value={wifiPassword} onChange={e=>setWifiPassword(e.target.value)} placeholder={wifiSecurity==="nopass"?"No password":"Enter Wi‑Fi password"} required={wifiSecurity!=="nopass"}/></div>
+      </div>
+      <label className="wifi-check"><input type="checkbox" checked={wifiHidden} onChange={e=>setWifiHidden(e.target.checked)}/><span><b>Hidden network</b><small>The SSID is not broadcast by the router.</small></span></label>
+      <div className="wifi-note"><span>⚡</span><div><b>Native connection</b><p>The QR uses the standard Wi‑Fi payload so supported phone cameras can recognize the network and offer <b>Join / Connect</b> without manually typing the password. The exact confirmation screen depends on the phone.</p></div></div>
      </> : type==="phone" ? <div className="field"><label>Phone Number</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+2517801020" required/></div>
        : <div className="field"><label>{type==="url"?"Website URL":type==="text"?"Text / Message":"Value"}</label><textarea rows={type==="text"?6:3} value={value} onChange={e=>setValue(e.target.value)} placeholder={type==="url"?"https://example.com":"Enter your content..."} required/></div>}
 
-     {error&&<p className="error">{error}</p>}<button className="btn primary create-btn">Generate QR →</button>
+     {error&&<p className="error">{error}</p>}<button className="btn primary create-btn">{type==="wifi"?"Generate Wi‑Fi QR →":"Generate QR →"}</button>
     </form>
 
-    {qr&&<div className="result-card"><div className="success">✓ QR created</div><img className="qr-image" src={qr}/><p className="public-url">{publicUrl}</p>
+    {qr&&<div className="result-card"><div className="success">✓ QR created</div><img className="qr-image" src={qr}/><p className="public-url">{publicUrl}</p>{type==="wifi"&&<p className="scan-hint">For the fastest connection, scan this QR directly with the phone camera or built-in QR scanner.</p>}
      <div className="result-actions"><a className="btn primary" href={publicUrl} target="_blank">Test Scan ↗</a><button className="btn light" onClick={()=>window.print()}>🖨 Print QR</button></div>
     </div>}
    </div>
