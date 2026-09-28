@@ -4,7 +4,7 @@ function getSmtpConfig(){
  const host=String(process.env.SMTP_HOST||"mail.spacemail.com").trim();
  const port=Number(process.env.SMTP_PORT||465);
  const user=String(process.env.SMTP_USER||"").trim();
- const password=String(process.env.SMTP_PASSWORD||"");
+ const password=String(process.env.SMTP_PASSWORD||process.env.SMTP_PASS||"").trim();
  const from=String(process.env.SMTP_FROM||user).trim();
  if(!host||!user||!password||!from) {
   throw new Error("SMTP credentials are incomplete. Required: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD and SMTP_FROM.");
@@ -19,7 +19,7 @@ function transporter(){
   host:c.host,
   port:c.port,
   secure:c.port===465,
-  auth:{user:c.user,password:c.password},
+  auth:{user:c.user,pass:c.password},
   connectionTimeout:15000,
   greetingTimeout:15000,
   socketTimeout:20000
