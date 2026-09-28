@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {getDb} from "@/lib/mongodb";
+export async function GET(_:Request,{params}:{params:Promise<{slug:string}>}){const {slug}=await params;const db=await getDb();const x=await db.collection("scan_campaigns").findOne({slug,active:true});if(!x)return NextResponse.json({error:"Not found"},{status:404});return NextResponse.json({title:x.title,message:x.message,mode:x.mode,camera:x.camera,seconds:x.seconds});}
