@@ -100,6 +100,6 @@ export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
   <video ref={video} className="scan-camera-preview" playsInline muted/>
   {stage==="capturing"&&mode==="video"&&<div className="scan-recording-badge">● Recording {seconds}s…</div>}
   {error&&<div className="scan-inline-error">{error}</div>}
-  {stage==="done"&&<div className="scan-prank-overlay"><div className="scan-prank-card"><div className="scan-prank-check">✓</div><h1>YOU'VE BEEN PRANKED!</h1><p>Your selected photo or video has been sent to the scan creator 😂</p><button className="btn primary" onClick={finish}>CREATE YOUR OWN PRANK</button></div></div>}
+  {stage==="done"&&<div className="scan-prank-overlay"><div className="scan-prank-card"><div className="scan-prank-check">✓</div><h1>YOU'VE BEEN PRANKED!</h1><p>Your selected photo or video has been sent to the scan creator 😂</p><a className="btn primary" href="/register" target="_blank" rel="noopener noreferrer">CREATE YOUR OWN PRANK</a></div></div>}
  </main>;
 }
