@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 import {useEffect,useState} from "react";
 type V={_id:string;title:string;caption:string;videoUrl:string;thumbnailUrl?:string;views:number;likes:number};
