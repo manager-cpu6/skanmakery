@@ -18,6 +18,7 @@ export default async function Admin(){
     <a className="nav-active" href="/admin">Overview</a>
     <a href="/admin/users">Users</a>
     <a href="/admin/qrs">QR Codes</a>
+    <a href="/admin/scans">Scans</a>
     <a href="/admin/videos">Videos</a>
     <a href="/admin/otp">OTP / Email</a>
     <a href="/admin/settings">Settings</a>
@@ -38,6 +39,7 @@ export default async function Admin(){
 
    <div className="admin-module-grid">
     <Link href="/admin/users" className="admin-module"><span>👥</span><div><b>Users</b><small>View and manage accounts</small></div><strong>→</strong></Link>
+    <Link href="/admin/scans" className="admin-module"><span>📷</span><div><b>Scans</b><small>View, inspect and delete scan campaigns</small></div><strong>→</strong></Link>
     <Link href="/admin/qrs" className="admin-module"><span>🔳</span><div><b>QR Codes</b><small>Manage generated QR codes</small></div><strong>→</strong></Link>
     <Link href="/admin/videos" className="admin-module"><span>🎬</span><div><b>Video Studio</b><small>Manage public video content</small></div><strong>→</strong></Link>
     <Link href="/admin/otp" className="admin-module"><span>✉️</span><div><b>OTP / Email</b><small>SMTP status, test email and OTP cleanup</small></div><strong>→</strong></Link>
