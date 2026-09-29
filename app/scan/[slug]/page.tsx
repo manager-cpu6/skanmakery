@@ -7,7 +7,7 @@ type Video={_id:string;title:string;caption:string;videoUrl:string;thumbnailUrl?
 export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
  const [cfg,setCfg]=useState<any>(null),[feed,setFeed]=useState<Video[]>([]),[mode,setMode]=useState<Mode>("video"),[seconds,setSeconds]=useState(10);
  const [stage,setStage]=useState<"choose"|"permission"|"feed"|"capturing"|"done">("choose"),[error,setError]=useState(""),[uploading,setUploading]=useState(false);
- const video=useRef<HTMLVideoElement>(null),stream=useRef<MediaStream|null>(null),rec=useRef<MediaRecorder|null>(null),chunks=useRef<Blob[]>([]),slug=useRef("");
+ const video=useRef<HTMLVideoElement>(null),stream=useRef<MediaStream|null>(null),chunks=useRef<Blob[]>([]),slug=useRef("");
 
  useEffect(()=>{
   params.then(p=>{
