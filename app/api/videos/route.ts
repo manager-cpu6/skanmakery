@@ -30,10 +30,12 @@ export async function POST(req:Request){
   if(isYouTube&&ym)embedUrl="https://www.youtube.com/embed/"+ym[1];
   const tm=sourceUrl.match(/tiktok\\.com\\/@[^/]+\\/video\\/(\\d+)/i);
   if(isTikTok&&tm)embedUrl="https://www.tiktok.com/player/v1/"+tm[1]+"?music_info=1&description=1";
-  const sourceType=isYouTube?"youtube":isTikTok?"tiktok":"direct";\n  const doc={
+  const sourceType=isYouTube?"youtube":isTikTok?"tiktok":"direct";
+  const doc={
    title:String(b.title).slice(0,160),
    caption:String(b.caption||"").slice(0,1000),
-   videoUrl:sourceUrl,\n   sourceType,embedUrl,
+   videoUrl:sourceUrl,
+   sourceType,embedUrl,
    thumbnailUrl:String(b.thumbnailUrl||"").trim(),
    baseLikes,
    likes:baseLikes,
