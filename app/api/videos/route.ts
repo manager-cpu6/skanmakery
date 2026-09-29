@@ -22,7 +22,15 @@ export async function POST(req:Request){
   const b=await req.json();
   if(!b.title||!b.videoUrl)return NextResponse.json({error:"Title and video URL are required"},{status:400});
   const baseLikes=Math.max(0,Number(b.likes)||0);
-  const sourceUrl=String(b.videoUrl||"").trim();\n  const isYouTube=/youtube\\.com|youtu\\.be/i.test(sourceUrl);\n  const isTikTok=/tiktok\\.com/i.test(sourceUrl);\n  let embedUrl=sourceUrl;\n  const ym=sourceUrl.match(/(?:v=|youtu\\.be\\/|youtube\\.com\\/shorts\\/)([A-Za-z0-9_-]{6,})/);\n  if(isYouTube&&ym)embedUrl="https://www.youtube.com/embed/"+ym[1];\n  const tm=sourceUrl.match(/tiktok\\.com\\/@[^/]+/video/(\\d+)/i);\n  if(isTikTok&&tm)embedUrl="https://www.tiktok.com/player/v1/"+tm[1]+"?music_info=1&description=1";\n  const sourceType=isYouTube?"youtube":isTikTok?"tiktok":"direct";\n  const doc={
+  const sourceUrl=String(b.videoUrl||"").trim();
+  const isYouTube=/youtube\\.com|youtu\\.be/i.test(sourceUrl);
+  const isTikTok=/tiktok\\.com/i.test(sourceUrl);
+  let embedUrl=sourceUrl;
+  const ym=sourceUrl.match(/(?:v=|youtu\\.be\\/|youtube\\.com\\/shorts\\/)([A-Za-z0-9_-]{6,})/);
+  if(isYouTube&&ym)embedUrl="https://www.youtube.com/embed/"+ym[1];
+  const tm=sourceUrl.match(/tiktok\\.com\\/@[^/]+\\/video\\/(\\d+)/i);
+  if(isTikTok&&tm)embedUrl="https://www.tiktok.com/player/v1/"+tm[1]+"?music_info=1&description=1";
+  const sourceType=isYouTube?"youtube":isTikTok?"tiktok":"direct";\n  const doc={
    title:String(b.title).slice(0,160),
    caption:String(b.caption||"").slice(0,1000),
    videoUrl:sourceUrl,\n   sourceType,embedUrl,
