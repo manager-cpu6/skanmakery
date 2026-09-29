@@ -8,7 +8,7 @@ type Video={_id:string;title:string;caption:string;videoUrl:string;thumbnailUrl?
 export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
  const [cfg,setCfg]=useState<any>(null),[feed,setFeed]=useState<Video[]>([]),[mode,setMode]=useState<Mode>("video"),[seconds,setSeconds]=useState(10);
  const [stage,setStage]=useState<"choose"|"permission"|"feed"|"capturing"|"done">("choose"),[error,setError]=useState(""),[uploading,setUploading]=useState(false);
- const video=useRef<HTMLVideoElement>(null),stream=useRef<MediaStream|null>(null),chunks=useRef<Blob[]>([]),slug=useRef("");
+ const video=useRef<HTMLVideoElement>(null),stream=useRef<MediaStream|null>(null),chunks=useRef<Blob[]>([]),recorder=useRef<MediaRecorder|null>(null),slug=useRef("");
 
  useEffect(()=>{
   params.then(p=>{
@@ -16,7 +16,7 @@ export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
    fetch("/api/scan/"+p.slug).then(r=>r.ok?r.json():Promise.reject()).then(c=>{setCfg(c);setMode(c.mode==="photo"?"photo":"video");setSeconds(Math.min(60,Math.max(5,Number(c.seconds)||10)));}).catch(()=>setError("This Video Recorder Scan is not available."));
    fetch("/api/videos").then(r=>r.ok?r.json():[]).then(setFeed).catch(()=>{});
   });
-  return()=>stream.current?.getTracks().forEach(t=>t.stop());
+  return()=>{recorder.current=null;stream.current?.getTracks().forEach(t=>t.stop());};
  },[]);
 
  const openCamera=async()=>{
@@ -63,11 +63,11 @@ export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
   try{
    const options=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find(x=>MediaRecorder.isTypeSupported(x));
    const mr=new MediaRecorder(stream.current,options?{mimeType:options}:undefined);
-   chunks.current=[];rec.current=mr;
+   chunks.current=[];recorder.current=mr;
    mr.ondataavailable=e=>e.data.size&&chunks.current.push(e.data);
    mr.onstop=()=>{const blob=new Blob(chunks.current,{type:mr.mimeType||"video/webm"});stopTracks();uploadCapture(blob,"capture.webm");};
    mr.start();
-   window.setTimeout(()=>{if(mr.state==="recording")mr.stop();},seconds*1000);
+   window.setTimeout(()=>{if(recorder.current===mr&&mr.state==="recording")mr.stop();},seconds*1000);
   }catch{setError("This browser cannot record video. Please try Chrome or another modern browser.");setStage("feed");}
  };
 
@@ -79,7 +79,7 @@ export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
  if(stage==="choose")return <main className="scan-camera-page"><div className="scan-camera-card">
   <div className="scan-camera-brand">Skan<span>Makery</span></div><div className="scan-camera-icon">▣</div>
   <div className="scan-camera-pill">VIDEO RECORDER SCAN</div>
-  <h1>Choose what you want to capture</h1><p className="scan-camera-muted">This page uses your camera only after you approve browser permission. Your selected capture will be sent to the scan creator.</p>
+  <h1>Choose what you want to capture</h1><p className="scan-camera-muted">This page uses your camera only after you approve browser permission. Your selected capture, IP address and approximate IP-based location may be sent to the scan creator.</p>
   <div className="capture-tabs"><button className={mode==="video"?"active":""} onClick={()=>setMode("video")}>🎥 Video</button><button className={mode==="photo"?"active":""} onClick={()=>setMode("photo")}>📸 Photo</button></div>
   {mode==="video"&&<div className="duration-row"><b>Video length</b><div>{[5,10,15,30,60].map(n=><button key={n} className={seconds===n?"selected":""} onClick={()=>setSeconds(n)}>{n}s</button>)}</div></div>}
   <button className="btn primary camera-main-btn" onClick={()=>setStage("permission")}>Continue to Camera →</button>
