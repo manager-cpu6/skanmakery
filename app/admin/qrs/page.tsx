@@ -1,2 +1,9 @@
-import {redirect} from "next/navigation";import {getSession} from "@/lib/auth";
-export default async function Page(){const s=await getSession();if(!s)redirect("/login");return <main className="main"><div className="container"><h1>QR Management</h1><p style={{color:"#667085"}}>This module is scaffolded for the next implementation stage.</p></div></main>}
+// @ts-nocheck
+"use client";
+import {useEffect,useState} from "react";
+export default function QrAdmin(){
+ const [items,setItems]=useState<any[]>([]),[q,setQ]=useState("");
+ const load=()=>fetch("/api/admin/qrs").then(r=>r.json()).then(x=>setItems(Array.isArray(x)?x:[]));useEffect(load,[]);
+ const del=async(id:string)=>{if(!confirm("Delete this QR?"))return;await fetch("/api/admin/qrs",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});load()};
+ const filtered=items.filter(x=>(x.name+" "+x.type+" "+x.userId).toLowerCase().includes(q.toLowerCase()));
+ return <div className="dashboard"><aside className="side"><div className="brand">Skan<span>Makery</span></div><div style={{marginTop:30}}><a href="/admin">Overview</a><a href="/admin/users">Users</a><a className="nav-active" href="/admin/qrs">QR Codes</a><a href="/admin/scans">Scans</a><a href="/admin/videos">Videos</a><a href="/admin/otp">OTP / Email</a><a href="/admin/settings">Settings</a></div></aside><main className="main"><div className="page-head"><span className="eyebrow">QR CONTROL</span><h1>All QR Codes</h1><p>Monitor ownership, type, scans and status.</p></div><div className="card"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search QR name, type or user…" style={{width:"100%"}}/></div><div className="video-admin-list" style={{marginTop:18}}>{filtered.map(x=><div className="video-admin-card" key={x._id}><div><b>{x.name}</b><p>{x.type} · {x.active===false?"Disabled":"Active"}</p><small>Scans: {x.scanCount||0} · Owner: {x.userId} · Created: {x.createdAt?new Date(x.createdAt).toLocaleString():"—"}</small></div><div style={{display:"flex",gap:8}}>{x.qrUrl&&<a className="btn light" href={x.qrUrl} target="_blank">Open</a>}<button className="btn light" onClick={()=>del(x._id)}>Delete</button></div></div>)}</div></main></div>
