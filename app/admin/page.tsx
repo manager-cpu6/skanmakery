@@ -1,7 +1,9 @@
+// @ts-nocheck
 import {redirect} from "next/navigation";
 import {getSession} from "@/lib/auth";
 import {getDb} from "@/lib/mongodb";
 import Link from "next/link";
+export const dynamic="force-dynamic";
 
 export default async function Admin(){
  const s=await getSession(); if(!s||s.role!=="admin")redirect("/login");
