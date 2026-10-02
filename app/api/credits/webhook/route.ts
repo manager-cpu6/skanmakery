@@ -12,7 +12,7 @@ export async function POST(req:Request){
   const {sign:_,...unsigned}=payload;
   const key=String(process.env.CRYPTOMUS_PAYMENT_API_KEY||"");
   const expected=crypto.createHash("md5").update(Buffer.from(JSON.stringify(unsigned)).toString("base64")+key).digest("hex");
-  if(!crypto.timingSafeEqual(Buffer.from(sign),Buffer.from(expected)))return NextResponse.json({error:"Invalid signature"},{status:401});
+  if(sign.length!==expected.length||!crypto.timingSafeEqual(Buffer.from(sign),Buffer.from(expected)))return NextResponse.json({error:"Invalid signature"},{status:401});
 
   const db=await getDb();
   const order=await db.collection("credit_orders").findOne({$or:[{orderId:payload.order_id},{uuid:payload.uuid}]});
