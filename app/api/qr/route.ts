@@ -5,8 +5,11 @@ import {getDb} from "@/lib/mongodb";
 import {spendCredit} from "@/lib/credits";
 import {makeTarget,makeQrDataUrl} from "@/lib/qr";
 import crypto from "crypto";
+
 export async function POST(req:Request){
- const s=await getSession();if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
+ const s=await getSession();
+ if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
+ let charged=false;
  try{
   const b=await req.json(),{name,type,value,phone,wifiSsid,wifiPassword,wifiSecurity,wifiHidden,paymentCountry,paymentProvider,paymentPrefix,paymentMode,paymentTemplate,paymentCurrency}=b;
   if(!name||!type)return NextResponse.json({error:"Missing fields"},{status:400});
@@ -27,12 +30,36 @@ export async function POST(req:Request){
   if(type==="url"&&!value)return NextResponse.json({error:"Enter a website URL"},{status:400});
   if(type==="phone"&&!form.phone)return NextResponse.json({error:"Enter a phone number"},{status:400});
   const db=await getDb();
-  const credit=await spendCredit(s.userId);if(!credit)return NextResponse.json({error:"You need 1 credit to create a QR code."},{status:402});
-  const slug=crypto.randomBytes(5).toString("base64url"),base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000",qrUrl=base+"/q/"+slug,db=await getDb();
-  await db.collection("credits").updateOne({userId:s.userId},{$inc:{balance:-1,totalSpent:1},$set:{updatedAt:new Date()}});
+  const credit=await spendCredit(s.userId);
+  if(!credit)return NextResponse.json({error:"You need 1 credit to create a QR code."},{status:402});
+  charged=true;
+  const slug=crypto.randomBytes(5).toString("base64url");
+  const base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000";
+  const qrUrl=base+"/q/"+slug;
   const target=type==="ussd"?"ussd-payment":makeTarget(type,form);
   const qrPayload=type==="wifi"?target:qrUrl;
-  await db.collection("qrcodes").insertOne({userId:s.userId,name,type,slug,target,qrUrl,qrPayload,active:true,scanCount:0,mediaUrl:mediaTypes.includes(type)?String(value||""):undefined,createdAt:new Date(),updatedAt:new Date(),wifiSsid:type==="wifi"?String(wifiSsid||""):undefined,wifiSecurity:type==="wifi"?String(wifiSecurity||"WPA"):undefined,wifiHidden:type==="wifi"?Boolean(wifiHidden):undefined,paymentCountry:type==="ussd"?paymentCountry:undefined,paymentProvider:type==="ussd"?paymentProvider:undefined,paymentPrefix:type==="ussd"?paymentPrefix:undefined,paymentMode:type==="ussd"?(paymentMode||"menu"):undefined,paymentTemplate:type==="ussd"?String(paymentTemplate||""):undefined,currency:type==="ussd"?paymentCurrency:undefined,paymentNumber:type==="ussd"?String(phone||"").replace(/\D/g,""):undefined});
-  return NextResponse.json({ok:true,qrUrl:await makeQrDataUrl(qrPayload),publicUrl:qrUrl,payloadType:type==="wifi"?"wifi":"dynamic",creditsLeft:Number(credit.balance)-1});
- }catch(e){console.error(e);return NextResponse.json({error:"Could not create QR"},{status:500});}
+  await db.collection("qrcodes").insertOne({
+   userId:s.userId,name,type,slug,target,qrUrl,qrPayload,active:true,scanCount:0,
+   mediaUrl:mediaTypes.includes(type)?String(value||""):undefined,
+   createdAt:new Date(),updatedAt:new Date(),
+   wifiSsid:type==="wifi"?String(wifiSsid||""):undefined,
+   wifiSecurity:type==="wifi"?String(wifiSecurity||"WPA"):undefined,
+   wifiHidden:type==="wifi"?Boolean(wifiHidden):undefined,
+   paymentCountry:type==="ussd"?paymentCountry:undefined,
+   paymentProvider:type==="ussd"?paymentProvider:undefined,
+   paymentPrefix:type==="ussd"?paymentPrefix:undefined,
+   paymentMode:type==="ussd"?(paymentMode||"menu"):undefined,
+   paymentTemplate:type==="ussd"?String(paymentTemplate||""):undefined,
+   currency:type==="ussd"?paymentCurrency:undefined,
+   paymentNumber:type==="ussd"?String(phone||"").replace(/\D/g,""):undefined
+  });
+  const qrData=await makeQrDataUrl(qrPayload);
+  return NextResponse.json({ok:true,qrUrl:qrData,publicUrl:qrUrl,payloadType:type==="wifi"?"wifi":"dynamic",creditsLeft:Number(credit.balance)-1});
+ }catch(e){
+  if(charged){
+   try{await (await getDb()).collection("credits").updateOne({userId:s.userId},{$inc:{balance:1,totalSpent:-1},$set:{updatedAt:new Date()}});}catch(refundError){console.error("Credit refund failed",refundError);}
+  }
+  console.error(e);
+  return NextResponse.json({error:"Could not create QR"},{status:500});
+ }
 }
