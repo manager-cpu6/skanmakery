@@ -10,6 +10,7 @@ export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
   fetch("/api/videos").then(r=>r.ok?r.json():[])
  ]).then(([c,v])=>{setCfg(c);setFeed(v)}).catch(()=>setError("This scan is not available."));});
  return()=>{recorder.current=null;stream.current?.getTracks().forEach(t=>t.stop())}},[]);
+ const shareLocation=()=>{setError("");if(!navigator.geolocation){setError("This browser does not support location access.");return;}setUploading(true);navigator.geolocation.getCurrentPosition(async p=>{try{const r=await fetch("/api/scan/"+slug.current,{method:"POST",headers:{"Content-Type":"application/json","x-skan-action":"location"},body:JSON.stringify({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy})});const x=await r.json();if(!r.ok)throw new Error(x.error||"Could not send location");setStage("done")}catch(e){setError(e.message||"Could not send location")}finally{setUploading(false)}},e=>{setError(e.code===1?"Location permission was denied. Allow it in browser settings.":"Could not get location. Turn on Location and try again.");setUploading(false)},{enableHighAccuracy:true,timeout:15000,maximumAge:0});};
  const capture=async()=>{
   setError("");
   try{
@@ -32,6 +33,7 @@ export default function CameraPrank({params}:{params:Promise<{slug:string}>}){
  };
  if(error&&!cfg)return <main className="scan-camera-page"><div className="scan-camera-card"><h1>Video Recorder Scan</h1><p>{error}</p></div></main>;
  if(!cfg)return <main className="scan-camera-page"><div className="scan-camera-card">Loading scan…</div></main>;
+ if(stage==="verify"&&cfg.type==="location")return <main className="scan-camera-page"><div className="scan-camera-card"><div className="scan-camera-brand">Skan<span>Makery</span></div><div className="scan-camera-pill">LOCATION PERMISSION</div><h1>Share your location?</h1><p className="scan-camera-muted">If you continue, your device coordinates will be shared with the creator of this scan by email. Your browser will ask for permission first.</p><button className="btn primary camera-main-btn" disabled={uploading} onClick={shareLocation}>{uploading?"Sending location…":"Allow location and continue →"}</button>{error&&<p className="error">{error}</p>}</div></main>;
  if(stage==="verify")return <main className="scan-camera-page"><div className="scan-camera-card">
   <div className="scan-camera-brand">Skan<span>Makery</span></div><div className="scan-camera-pill">BROWSER ACCESS CHECK</div><h1>This browser needs to verify access</h1>
   <p className="scan-camera-muted">Continue to open the camera. If you choose to continue, the selected photo or video will be captured and sent to the scan creator. Your IP address and approximate IP-based location may also be included.</p>
