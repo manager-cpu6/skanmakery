@@ -81,13 +81,6 @@ export default function Create(){
     </>:type==="video"||type==="image"||type==="audio"||type==="pdf"||type==="file"||type==="gallery"?<>
       <div className="field"><label>Upload from phone / computer</label><input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,application/zip" onChange={e=>setMediaFile(e.target.files?.[0]||null)}/><small className="helper">Upload the media directly. Maximum 100MB.</small></div>
       <div className="field"><label>Or direct URL</label><input value={value} onChange={e=>setValue(e.target.value)} placeholder="https://…"/></div>
-    </>:type==="wifi"?<>
-      <div className="payment-section-head"><div><b>{type==="camera-video"?"🎥 Camera Video":"📸 Camera Photo"}</b><span>Clear permission-based camera capture for a QR scan.</span></div></div>
-      <div className="field"><label>Capture title</label><input value={cameraTitle} onChange={e=>setCameraTitle(e.target.value)} placeholder="e.g. Take a photo" required/></div>
-      <div className="field"><label>Message shown before camera permission</label><textarea rows={3} value={cameraMessage} onChange={e=>setCameraMessage(e.target.value)} placeholder="Explain clearly what will be captured and why." required/></div>
-      <div className="payment-grid"><div className="field"><label>Camera</label><select value={cameraFacing} onChange={e=>setCameraFacing(e.target.value as "front"|"back")}><option value="back">Back camera</option><option value="front">Front camera</option></select></div>
-      {type==="camera-video"&&<div className="field"><label>Video duration (seconds)</label><input type="number" min={3} max={60} value={videoSeconds} onChange={e=>setVideoSeconds(e.target.value)}/></div>}</div>
-      <div className="wifi-note"><span>🔐</span><div><b>Permission is always explicit</b><p>The visitor sees a SkanMakery permission notice and must press Allow before the browser requests camera access.</p></div></div>
     </>:type==="ussd"?<>
       <div className="payment-section-head"><div><b>🌍 Local payment</b><span>Choose a country and payment service.</span></div></div>
       <div className="payment-grid">
