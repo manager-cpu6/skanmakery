@@ -1,0 +1,3 @@
+import crypto from "crypto";
+const key=()=>String(process.env.CRYPTOMUS_PAYMENT_API_KEY||"").trim();const merchant=()=>String(process.env.CRYPTOMUS_MERCHANT_ID||"").trim();
+export async function cryptomus<T=any>(path:string,body:unknown):Promise<T>{const raw=JSON.stringify(body);const sign=crypto.createHash("md5").update(Buffer.from(raw).toString("base64")+key()).digest("hex");const r=await fetch("https://api.cryptomus.com/v1/"+path,{method:"POST",headers:{merchant:merchant(),sign,"Content-Type":"application/json"},body:raw,cache:"no-store"});const j=await r.json();if(!r.ok||j.state!==0)throw new Error(j.message||"Cryptomus request failed");return j.result as T;}
