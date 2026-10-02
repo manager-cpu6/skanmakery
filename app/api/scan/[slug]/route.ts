@@ -39,7 +39,7 @@ export async function GET(_req:Request,{params}:{params:Promise<{slug:string}>})
  const db=await getDb();
  const c=await db.collection("scan_campaigns").findOne({slug,active:true});
  if(!c)return NextResponse.json({error:"Not found"},{status:404});
- return NextResponse.json({title:c.title,message:c.message,type:c.type||"camera",mode:c.mode||"photo",camera:c.camera||"back",seconds:c.seconds||10,latitude:c.latitude??null,longitude:c.longitude??null,accuracy:c.accuracy??null,name:c.name||""});
+ return NextResponse.json({title:c.title,message:c.message,mode:c.mode,camera:c.camera,seconds:c.seconds});
 }
 
 export async function POST(req:Request,{params}:{params:Promise<{slug:string}>}){
