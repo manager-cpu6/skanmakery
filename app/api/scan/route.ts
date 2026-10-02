@@ -5,6 +5,14 @@ import {getDb} from "@/lib/mongodb";
 import {spendCredit} from "@/lib/credits";
 import {makeQrDataUrl} from "@/lib/qr";
 import crypto from "crypto";
+export async function GET(){
+ const s=await getSession();
+ if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
+ const db=await getDb();
+ const items=await db.collection("scan_campaigns").find({userId:s.userId}).sort({createdAt:-1}).limit(50).project({_id:1,name:1,title:1,type:1,mode:1,slug:1,publicUrl:1,createdAt:1,active:1,captures:1,views:1}).toArray();
+ return NextResponse.json({items:items.map((x:any)=>({...x,_id:String(x._id),publicUrl:x.publicUrl||((process.env.NEXT_PUBLIC_APP_URL||"https://skanmakery.vercel.app")+"/scan/"+x.slug)}))});
+}
+
 export async function POST(req:Request){
  const s=await getSession(); if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
  try{const b=await req.json(),name=String(b.name||"").trim(),design=b.design||{};if(!name)return NextResponse.json({error:"Enter a scan name"},{status:400});
@@ -14,6 +22,6 @@ export async function POST(req:Request){
  const slug=crypto.randomBytes(9).toString("base64url"),base=process.env.NEXT_PUBLIC_APP_URL||"https://skanmakery.vercel.app",publicUrl=base+"/scan/"+slug,db=await getDb();
  const creatorEmail=String(s.email||process.env.ADMIN_GMAIL||process.env.ADMIN_EMAIL||"").trim().toLowerCase();
  const credit=await spendCredit(s.userId);if(!credit)return NextResponse.json({error:"You need 1 credit to create a scan. Buy credits or wait for your weekly refill."},{status:402});
- await db.collection("scan_campaigns").insertOne({userId:s.userId,design,creatorEmail,creatorName:String(s.name||"SkanMakery creator"),name,title,message,type,mode,camera,seconds:10,latitude:type==="location"?lat:undefined,longitude:type==="location"?lng:undefined,slug,active:true,createdAt:new Date(),updatedAt:new Date(),views:0,captures:0,locations:0});
+ await db.collection("scan_campaigns").insertOne({userId:s.userId,design,creatorEmail,creatorName:String(s.name||"SkanMakery creator"),name,title,message,type,mode,camera,seconds:10,latitude:type==="location"?lat:undefined,longitude:type==="location"?lng:undefined,slug,publicUrl,active:true,createdAt:new Date(),updatedAt:new Date(),views:0,captures:0,locations:0});
  return NextResponse.json({ok:true,qrUrl:await makeQrDataUrl(publicUrl,design),publicUrl,slug,creditsLeft:Number(credit.balance)-1});
  }catch(e){console.error(e);return NextResponse.json({error:"Could not create scan"},{status:500});}}
