@@ -2,6 +2,7 @@
 import {NextResponse} from "next/server";
 import {getSession} from "@/lib/auth";
 import {getDb} from "@/lib/mongodb";
+import {spendCredit} from "@/lib/credits";
 import {makeTarget,makeQrDataUrl} from "@/lib/qr";
 import crypto from "crypto";
 export async function POST(req:Request){
@@ -26,7 +27,7 @@ export async function POST(req:Request){
   if(type==="url"&&!value)return NextResponse.json({error:"Enter a website URL"},{status:400});
   if(type==="phone"&&!form.phone)return NextResponse.json({error:"Enter a phone number"},{status:400});
   const db=await getDb();
-  const credit=await db.collection("credits").findOne({userId:s.userId});if(!credit||Number(credit.balance||0)<1)return NextResponse.json({error:"You need 1 credit to create a QR code."},{status:402});
+  const credit=await spendCredit(s.userId);if(!credit)return NextResponse.json({error:"You need 1 credit to create a QR code."},{status:402});
   const slug=crypto.randomBytes(5).toString("base64url"),base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000",qrUrl=base+"/q/"+slug,db=await getDb();
   await db.collection("credits").updateOne({userId:s.userId},{$inc:{balance:-1,totalSpent:1},$set:{updatedAt:new Date()}});
   const target=type==="ussd"?"ussd-payment":makeTarget(type,form);
