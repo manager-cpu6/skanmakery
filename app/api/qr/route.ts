@@ -11,7 +11,7 @@ export async function POST(req:Request){
  if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
  let charged=false;
  try{
-  const b=await req.json(),{name,type,value,phone,wifiSsid,wifiPassword,wifiSecurity,wifiHidden,paymentCountry,paymentProvider,paymentPrefix,paymentMode,paymentTemplate,paymentCurrency}=b;
+  const b=await req.json(),{name,type,value,phone,wifiSsid,wifiPassword,wifiSecurity,wifiHidden,paymentCountry,paymentProvider,paymentPrefix,paymentMode,paymentTemplate,paymentCurrency,design}=b;
   if(!name||!type)return NextResponse.json({error:"Missing fields"},{status:400});
   const form:any={url:value,text:value,phone:value,email:value,whatsapp:value,ssid:wifiSsid||value,password:wifiPassword||"",security:wifiSecurity||"WPA",hidden:String(Boolean(wifiHidden))};
   if(type==="phone")form.phone=phone||value||"";
@@ -39,7 +39,7 @@ export async function POST(req:Request){
   const target=type==="ussd"?"ussd-payment":makeTarget(type,form);
   const qrPayload=type==="wifi"?target:qrUrl;
   await db.collection("qrcodes").insertOne({
-   userId:s.userId,name,type,slug,target,qrUrl,qrPayload,active:true,scanCount:0,
+   userId:s.userId,name,type,slug,target,qrUrl,qrPayload,design:design||{},active:true,scanCount:0,
    mediaUrl:mediaTypes.includes(type)?String(value||""):undefined,
    createdAt:new Date(),updatedAt:new Date(),
    wifiSsid:type==="wifi"?String(wifiSsid||""):undefined,
@@ -53,7 +53,7 @@ export async function POST(req:Request){
    currency:type==="ussd"?paymentCurrency:undefined,
    paymentNumber:type==="ussd"?String(phone||"").replace(/\D/g,""):undefined
   });
-  const qrData=await makeQrDataUrl(qrPayload);
+  const qrData=await makeQrDataUrl(qrPayload,design||{});
   return NextResponse.json({ok:true,qrUrl:qrData,publicUrl:qrUrl,payloadType:type==="wifi"?"wifi":"dynamic",creditsLeft:Number(credit.balance)-1});
  }catch(e){
   if(charged){
