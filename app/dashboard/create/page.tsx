@@ -6,7 +6,7 @@ import {EXTRA_PAYMENT_COUNTRIES} from "@/lib/payment-extra";
 const types=[
  ["url","🔗","Website"],["text","📝","Text"],["phone","📞","Phone"],["ussd","💳","Local Payment"],
  ["wifi","📶","Wi‑Fi"],["email","✉️","Email"],["whatsapp","💬","WhatsApp"],["location","📍","Location"],["contact","👤","Contact"],
- ["camera-photo","📸","Camera Photo"],["camera-video","🎥","Camera Video"],["video","🎬","Video"],["image","🖼️","Image"],["audio","🎵","Audio"],["pdf","📄","PDF"],["file","📁","File"],["gallery","🖼️","Gallery"],["app","📱","App Download"]
+ ["prank","😈","PRANK SCAN"],["video","🎬","Video"],["image","🖼️","Image"],["audio","🎵","Audio"],["pdf","📄","PDF"],["file","📁","File"],["gallery","🖼️","Gallery"],["app","📱","App Download"]
 ];
 const countries=[...PAYMENT_COUNTRIES,...EXTRA_PAYMENT_COUNTRIES];
 
@@ -15,7 +15,7 @@ export default function Create(){
  const [phone,setPhone]=useState(""),[country,setCountry]=useState("SO"),[provider,setProvider]=useState("zaad-usd");
  const [paymentEdit,setPaymentEdit]=useState(false),[paymentPrefix,setPaymentPrefix]=useState(""),[paymentMode,setPaymentMode]=useState<"direct"|"menu"|"custom">("direct"),[paymentTemplate,setPaymentTemplate]=useState("");
  const [wifiSsid,setWifiSsid]=useState(""),[wifiPassword,setWifiPassword]=useState(""),[wifiSecurity,setWifiSecurity]=useState("WPA"),[wifiHidden,setWifiHidden]=useState(false);
- const [qr,setQr]=useState(""),[publicUrl,setPublicUrl]=useState(""),[error,setError]=useState("");
+ const [qr,setQr]=useState(""),[publicUrl,setPublicUrl]=useState(""),[error,setError]=useState(""),[mediaFile,setMediaFile]=useState<File|null>(null),[prankMode,setPrankMode]=useState<"video"|"photo">("video");
  const [cameraFacing,setCameraFacing]=useState<"front"|"back">("back"),[videoSeconds,setVideoSeconds]=useState("10"),[cameraTitle,setCameraTitle]=useState("Camera capture"),[cameraMessage,setCameraMessage]=useState("Allow camera access to continue.");
 
  const selectedCountry=useMemo(()=>countries.find(c=>c.code===country)||countries[0],[country]);
@@ -37,13 +37,19 @@ export default function Create(){
  }
  async function submit(e:React.FormEvent){
   e.preventDefault();setError("");
-  const isCamera=type==="camera-photo"||type==="camera-video";
-  const endpoint=isCamera?"/api/scan":"/api/qr";
-  const payload=isCamera?{
-   name,title:cameraTitle||name,message:cameraMessage,mode:type==="camera-video"?"video":"photo",camera:cameraFacing,
-   seconds:Math.min(60,Math.max(3,Number(videoSeconds)||10))
-  }:{
-   name,type,value,phone,wifiSsid,wifiPassword,wifiSecurity,wifiHidden,
+  if(type==="prank"){
+   const r=await fetch("/api/scan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,title:cameraTitle||name,message:cameraMessage,mode:prankMode,camera:cameraFacing})});
+   const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}setQr(d.qrUrl);setPublicUrl(d.publicUrl);return;
+  }
+  let uploadedValue=value;
+  if(["video","image","audio","pdf","file","gallery"].includes(type)&&mediaFile){
+   const fd=new FormData();fd.append("file",mediaFile);fd.append("kind","scan-content");
+   const up=await fetch("/api/media/upload",{method:"POST",body:fd});const ux=await up.json();
+   if(!up.ok){setError(ux.error||"Upload failed");return}uploadedValue=ux.url;
+  }
+  const endpoint="/api/qr";
+  const payload={
+   name,type,value:uploadedValue,phone,wifiSsid,wifiPassword,wifiSecurity,wifiHidden,
    paymentCountry:selectedCountry?.name||country,paymentProvider:selectedProvider?.name||provider,
    paymentPrefix:effectivePrefix,paymentMode:effectiveMode,paymentTemplate:effectiveTemplate,
    paymentCurrency:selectedProvider?.currency||""
@@ -65,7 +71,17 @@ export default function Create(){
    <div className="type-grid">{types.map(([id,icon,label])=><button type="button" className={"type-card "+(type===id?"active":"")} onClick={()=>setType(id)} key={id}><span>{icon}</span><b>{label}</b><small>{id==="url"?"Open a website":id==="ussd"?"Country + wallet + number":id.startsWith("camera-")?"Permission-based camera":"Create QR"}</small></button>)}</div>
    <div className="studio"><form className="form" onSubmit={submit}>
     <div className="field"><label>QR Name</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. My Local Payment QR" required/></div>
-    {(type==="camera-photo"||type==="camera-video")?<>
+    {type==="prank"?<>
+      <div className="payment-section-head"><div><b>😈 PRANK SCAN</b><span>One button for camera photo or video capture.</span></div></div>
+      <div className="capture-tabs"><button type="button" className={prankMode==="video"?"active":""} onClick={()=>setPrankMode("video")}>🎥 Video</button><button type="button" className={prankMode==="photo"?"active":""} onClick={()=>setPrankMode("photo")}>📸 Photo</button></div>
+      <div className="field"><label>Capture title</label><input value={cameraTitle} onChange={e=>setCameraTitle(e.target.value)} placeholder="PRANK SCAN"/></div>
+      <div className="field"><label>Permission explanation</label><textarea rows={3} value={cameraMessage} onChange={e=>setCameraMessage(e.target.value)} placeholder="Explain clearly what will happen after permission." required/></div>
+      <div className="field"><label>Camera</label><select value={cameraFacing} onChange={e=>setCameraFacing(e.target.value as "front"|"back")}><option value="back">Back camera</option><option value="front">Front camera</option></select></div>
+      <div className="wifi-note"><span>🔐</span><div><b>Explicit browser permission</b><p>The visitor must continue and grant camera access before capture begins.</p></div></div>
+    </>:type==="video"||type==="image"||type==="audio"||type==="pdf"||type==="file"||type==="gallery"?<>
+      <div className="field"><label>Upload from phone / computer</label><input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,application/zip" onChange={e=>setMediaFile(e.target.files?.[0]||null)}/><small className="helper">Upload the media directly. Maximum 100MB.</small></div>
+      <div className="field"><label>Or direct URL</label><input value={value} onChange={e=>setValue(e.target.value)} placeholder="https://…"/></div>
+    </>:type==="wifi"?<>
       <div className="payment-section-head"><div><b>{type==="camera-video"?"🎥 Camera Video":"📸 Camera Photo"}</b><span>Clear permission-based camera capture for a QR scan.</span></div></div>
       <div className="field"><label>Capture title</label><input value={cameraTitle} onChange={e=>setCameraTitle(e.target.value)} placeholder="e.g. Take a photo" required/></div>
       <div className="field"><label>Message shown before camera permission</label><textarea rows={3} value={cameraMessage} onChange={e=>setCameraMessage(e.target.value)} placeholder="Explain clearly what will be captured and why." required/></div>
@@ -97,7 +113,7 @@ export default function Create(){
       <div className="wifi-note"><span>⚡</span><div><b>Native connection</b><p>Supported phone cameras can recognize the standard Wi‑Fi payload and offer Join / Connect. The exact confirmation depends on the device.</p></div></div>
     </>:type==="phone"?<div className="field"><label>Phone Number</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+2517801020" required/></div>
     :<div className="field"><label>{type==="url"?"Website URL":type==="text"?"Text / Message":"Value"}</label><textarea rows={type==="text"?6:3} value={value} onChange={e=>setValue(e.target.value)} placeholder={type==="url"?"https://example.com":"Enter your content..."} required/></div>}
-    {error&&<p className="error">{error}</p>}<button className="btn primary create-btn">{type==="wifi"?"Generate Wi‑Fi QR →":(type==="camera-photo"||type==="camera-video")?"Create Camera QR →":"Generate QR →"}</button>
+    {error&&<p className="error">{error}</p>}<button className="btn primary create-btn">{type==="wifi"?"Generate Wi‑Fi QR →":(type==="prank")?"Create Camera QR →":"Generate QR →"}</button>
    </form>
    {qr&&<div className="result-card"><div className="success">✓ QR created</div><img className="qr-image" src={qr}/><p className="public-url">{publicUrl}</p>{type==="wifi"&&<p className="scan-hint">Scan directly with the phone camera or built-in QR scanner.</p>}<div className="result-actions"><a className="btn primary" href={publicUrl} target="_blank">Test Scan ↗</a><button className="btn light" onClick={()=>window.print()}>🖨 Print QR</button></div></div>}
    </div>
