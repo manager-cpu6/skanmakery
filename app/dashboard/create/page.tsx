@@ -37,8 +37,8 @@ export default function Create(){
  }
  async function submit(e:React.FormEvent){
   e.preventDefault();setError("");
-  if(type==="prank"){
-   const r=await fetch("/api/scan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,title:cameraTitle||name,message:cameraMessage,mode:prankMode,camera:cameraFacing})});
+  if(type==="location"||type==="prank"){
+   const r=await fetch("/api/scan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,title:type==="location"?(name+" location request"):(cameraTitle||name),message:type==="location"?"Continue only if you want to share your device location with the scan creator.":cameraMessage,type:type==="location"?"location":"camera",mode:prankMode,camera:cameraFacing})});
    const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}setQr(d.qrUrl);setPublicUrl(d.publicUrl);return;
   }
   let uploadedValue=value;
