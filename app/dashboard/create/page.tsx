@@ -64,7 +64,7 @@ export default function Create(){
   };
   const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
   const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}
-  setQr(d.qrUrl);setPublicUrl(d.publicUrl);
+  setQr(d.qrUrl);setPublicUrl(d.publicUrl);if(typeof d.creditsLeft==="number")setCreditBalance(d.creditsLeft);
  }
  const preview=effectiveMode==="direct"
   ? (effectiveTemplate||((effectivePrefix||"*XXX*")+"{number}*{amount}#")).replace("{number}",phone||"7801020").replace("{amount}","AMOUNT")
