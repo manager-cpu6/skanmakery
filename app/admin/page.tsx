@@ -1,57 +1,57 @@
+// @ts-nocheck
 import {redirect} from "next/navigation";
 import {getSession} from "@/lib/auth";
 import {getDb} from "@/lib/mongodb";
 import Link from "next/link";
+export const dynamic="force-dynamic";
 
 export default async function Admin(){
- const s=await getSession();
- if(!s||s.role!=="admin")redirect("/login");
+ const s=await getSession();if(!s||s.role!=="admin")redirect("/login");
  const db=await getDb();
- const users=await db.collection("users").countDocuments();
- const qrs=await db.collection("qrcodes").countDocuments();
- const scans=(await db.collection("qrcodes").aggregate([{$group:{_id:null,total:{$sum:"$scanCount"}}}]).toArray())[0]?.total||0;
- const pendingOtp=await db.collection("verification_codes").countDocuments({expiresAt:{$gt:new Date()}});
- return <div className="dashboard">
-  <aside className="side">
-   <div className="brand">Skan<span>Makery</span></div>
-   <div style={{marginTop:30}}>
-    <a className="nav-active" href="/admin">Overview</a>
-    <a href="/admin/users">Users</a>
-    <a href="/admin/qrs">QR Codes</a>
-    <a href="/admin/scans">Scans</a>
-    <a href="/admin/videos">Videos</a>
-    <a href="/admin/otp">OTP / Email</a>
-    <a href="/admin/settings">Settings</a>
-    <a href="/dashboard">User Dashboard</a>
-   </div>
-  </aside>
-  <main className="main">
-   <div className="topline">
-    <div><span className="eyebrow">SYSTEM ADMIN</span><h1>Admin Panel</h1><p style={{color:"#667085"}}>Manage SkanMakery from one control center.</p></div>
-   </div>
-
-   <div className="cards">
-    <div className="card"><div>Total Users</div><div className="stat">{users}</div></div>
-    <div className="card"><div>Total QR Codes</div><div className="stat">{qrs}</div></div>
-    <div className="card"><div>Total Scans</div><div className="stat">{scans}</div></div>
-    <div className="card"><div>Pending OTP</div><div className="stat">{pendingOtp}</div></div>
-   </div>
-
-   <div className="admin-module-grid">
-    <Link href="/admin/users" className="admin-module"><span>👥</span><div><b>Users</b><small>View and manage accounts</small></div><strong>→</strong></Link>
-    <Link href="/admin/scans" className="admin-module"><span>📷</span><div><b>Scans</b><small>View, inspect and delete scan campaigns</small></div><strong>→</strong></Link>
-    <Link href="/admin/qrs" className="admin-module"><span>🔳</span><div><b>QR Codes</b><small>Manage generated QR codes</small></div><strong>→</strong></Link>
-    <Link href="/admin/videos" className="admin-module"><span>🎬</span><div><b>Video Studio</b><small>Manage public video content</small></div><strong>→</strong></Link>
-    <Link href="/admin/otp" className="admin-module"><span>✉️</span><div><b>OTP / Email</b><small>SMTP status, test email and OTP cleanup</small></div><strong>→</strong></Link>
-    <Link href="/admin/settings" className="admin-module"><span>⚙️</span><div><b>Settings</b><small>System configuration</small></div><strong>→</strong></Link>
-    <Link href="/dashboard" className="admin-module"><span>🏠</span><div><b>User Dashboard</b><small>Open the normal user area</small></div><strong>→</strong></Link>
-   </div>
-
-   <section className="card" style={{marginTop:22}}>
-    <h2>OTP problem detected</h2>
-    <p style={{color:"#667085",lineHeight:1.6}}>The latest Production runtime error is <b>Missing credentials for "PLAIN"</b>. Open OTP / Email above and check SMTP credentials. The SMTP password must exist in Vercel Production environment variables.</p>
-    <Link href="/admin/otp" className="btn primary">Open OTP Control →</Link>
+ const [users,qrs,scans,barcodes,videos,followers,likes,pendingOtp,mediaFiles,qrAgg,scanAgg,captureAgg,locationAgg]=await Promise.all([
+  db.collection("users").countDocuments(),db.collection("qrcodes").countDocuments(),db.collection("scan_campaigns").countDocuments(),
+  db.collection("barcodes").countDocuments(),db.collection("videos").countDocuments({active:{$ne:false}}),db.collection("follows").countDocuments(),
+  db.collection("video_likes").countDocuments(),db.collection("verification_codes").countDocuments({expiresAt:{$gt:new Date()}}),
+  db.collection("media.files").countDocuments(),
+  db.collection("qrcodes").aggregate([{$group:{_id:null,total:{$sum:{$ifNull:["$scanCount",0]}}}}]).toArray(),
+  db.collection("scan_campaigns").aggregate([{$group:{_id:null,total:{$sum:{$ifNull:["$views",0]}}}}]).toArray(),
+  db.collection("scan_campaigns").aggregate([{$group:{_id:null,total:{$sum:{$ifNull:["$captures",0]}}}}]).toArray(),
+  db.collection("scan_campaigns").aggregate([{$group:{_id:null,total:{$sum:{$ifNull:["$locations",0]}}}}]).toArray()
+ ]);
+ const qrScans=qrAgg[0]?.total||0,views=scanAgg[0]?.total||0,captures=captureAgg[0]?.total||0,locations=locationAgg[0]?.total||0;
+ const nav=[["Overview","/admin","◈"],["Users","/admin/users","♙"],["QR Codes","/admin/qrs","▦"],["Scans","/admin/scans","⌁"],["Videos","/admin/videos","▶"],["OTP / Email","/admin/otp","✉"],["Settings","/admin/settings","⚙"]];
+ return <div className="admin-shell">
+  <aside className="admin-sidebar"><Link href="/admin" className="admin-brand">Skan<span>Makery</span><small>CONTROL CENTER</small></Link><div className="admin-status"><i/> SYSTEM ONLINE <span>2026</span></div><nav>{nav.map(([label,href,icon])=><Link key={href} href={href} className={href==="/admin"?"active":""}><b>{icon}</b><span>{label}</span></Link>)}</nav><div className="admin-side-bottom"><Link href="/dashboard">↩ User workspace</Link><small>Protected administrator area</small></div></aside>
+  <main className="admin-main">
+   <header className="admin-header"><div><span className="admin-kicker">SKANMAKERY / ADMIN</span><h1>Command Center</h1><p>Monitor and manage the complete platform from one workspace.</p></div><div className="admin-header-actions"><Link href="/admin/otp">Email health</Link><Link href="/dashboard">Open app ↗</Link></div></header>
+   <section className="admin-hero"><div><span>CONTROL EVERYTHING</span><h2>Your platform, in one view.</h2><p>Users, QR codes, barcodes, scan campaigns, captures, locations, media, videos and email are connected here.</p></div><div className="admin-orbit"><div>ADMIN</div><span>USERS</span><span>QR</span><span>SCANS</span><span>MEDIA</span></div></section>
+   <section className="admin-stat-grid-modern">
+    <article><span>USERS</span><strong>{users}</strong><small>Registered accounts</small><i>♙</i></article>
+    <article><span>QR CODES</span><strong>{qrs}</strong><small>{qrScans} total QR scans</small><i>▦</i></article>
+    <article><span>SCAN CAMPAIGNS</span><strong>{scans}</strong><small>{views} campaign views</small><i>⌁</i></article>
+    <article><span>BARCODES</span><strong>{barcodes}</strong><small>Generated records</small><i>▥</i></article>
+    <article><span>VIDEOS</span><strong>{videos}</strong><small>Active public videos</small><i>▶</i></article>
+    <article><span>MEDIA FILES</span><strong>{mediaFiles}</strong><small>GridFS files</small><i>◉</i></article>
+    <article><span>CAPTURES</span><strong>{captures}</strong><small>Camera captures received</small><i>●</i></article>
+    <article><span>LOCATION EVENTS</span><strong>{locations}</strong><small>Location events</small><i>📍</i></article>
    </section>
+   <div className="admin-content-grid">
+    <section className="admin-panel"><div className="admin-panel-head"><div><span>OPERATIONS</span><h2>Management modules</h2></div><small>Direct access</small></div><div className="admin-module-grid">
+     <Link href="/admin/users"><b>♙</b><div><strong>Users</strong><small>Accounts, status and records</small></div><em>→</em></Link>
+     <Link href="/admin/qrs"><b>▦</b><div><strong>QR Codes</strong><small>Owners, types and scan counts</small></div><em>→</em></Link>
+     <Link href="/admin/scans"><b>⌁</b><div><strong>Scan Center</strong><small>Location, photo and video campaigns</small></div><em>→</em></Link>
+     <Link href="/admin/videos"><b>▶</b><div><strong>Video Studio</strong><small>Feed, profile, likes and publishing</small></div><em>→</em></Link>
+     <Link href="/admin/otp"><b>✉</b><div><strong>OTP & Email</strong><small>SMTP health and verification codes</small></div><em>→</em></Link>
+     <Link href="/admin/settings"><b>⚙</b><div><strong>System Settings</strong><small>Platform configuration</small></div><em>→</em></Link>
+    </div></section>
+    <section className="admin-panel"><div className="admin-panel-head"><div><span>ENGAGEMENT</span><h2>Platform activity</h2></div></div>
+     <div className="admin-mini-row"><span>Followers</span><b>{followers}</b><small>follow relationships</small></div>
+     <div className="admin-mini-row"><span>Video likes</span><b>{likes}</b><small>user like records</small></div>
+     <div className="admin-mini-row"><span>Pending OTP</span><b>{pendingOtp}</b><small>unexpired verification codes</small></div>
+     <div className={"admin-alert "+(pendingOtp>0?"":"ok")}><b>{pendingOtp>0?"✉ Pending verification activity":"✓ Email queue clear"}</b><span>{pendingOtp>0?"Open OTP / Email to inspect SMTP and verification records.":"No unexpired verification codes are waiting."}</span><Link href="/admin/otp">Open email control →</Link></div>
+    </section>
+   </div>
+   <section className="admin-panel admin-quick"><div className="admin-panel-head"><div><span>QUICK ACTIONS</span><h2>Jump directly to what you need</h2></div></div><div className="quick-links"><Link href="/admin/users">Manage users</Link><Link href="/admin/qrs">Inspect QR library</Link><Link href="/admin/scans">Inspect scans</Link><Link href="/admin/videos">Manage videos</Link><Link href="/admin/otp">Test email</Link><Link href="/dashboard/create">Create QR / Barcode</Link></div></section>
   </main>
- </div>
+ </div>;
 }
