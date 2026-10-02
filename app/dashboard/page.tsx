@@ -18,7 +18,7 @@ export default async function Dashboard(){
   <aside className="spatial-sidebar glass">
    <Link href="/dashboard" className="spatial-logo">Skan<span>Makery</span></Link>
    <div className="workspace-card"><div className="workspace-avatar">{String(s.name||"U").slice(0,1).toUpperCase()}</div><div><b>{s.name}</b><small>Personal workspace</small></div><span>⌄</span></div>
-   <nav className="spatial-nav"><span className="nav-label">WORKSPACE</span><Link className="active" href="/dashboard">⌂ Overview</Link><Link href="/dashboard/create">＋ Create QR</Link><Link href="/dashboard/scans">📸 Scans</Link><Link href="/dashboard/qrs">▦ QR Library</Link><Link href="/videos">▶ Discover</Link><span className="nav-label">TOOLS</span><Link href="/profile">◎ Profile</Link>{s.role==="admin"&&<Link href="/admin">⚙ Admin</Link>}</nav>
+   <nav className="spatial-nav"><span className="nav-label">WORKSPACE</span><Link className="active" href="/dashboard">⌂ Overview</Link><Link href="/dashboard/create">＋ Create QR</Link><Link href="/dashboard/scans">📸 Scans</Link><Link href="/dashboard/qrs">▦ QR Library</Link><Link href="/dashboard/credits">⚡ Credits</Link><Link href="/videos">▶ Discover</Link><span className="nav-label">TOOLS</span><Link href="/profile">◎ Profile</Link>{s.role==="admin"&&<Link href="/admin">⚙ Admin</Link>}</nav>
    <div className="sidebar-bottom"><div className="upgrade-mini"><b>✦ SkanMakery Pro</b><small>More analytics, storage & customization.</small><Link href="/dashboard/create">Explore →</Link></div><small>Made for creators · 2026</small></div>
   </aside>
   <main className="spatial-main">
