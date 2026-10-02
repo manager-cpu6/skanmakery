@@ -19,11 +19,25 @@ export async function POST(req:Request){
   if(!order)return NextResponse.json({ok:true});
 
   if(["paid","paid_over"].includes(String(payload.status))&&!order.credited){
-   await db.collection("credits").updateOne(
-    {userId:order.userId},
-    {$inc:{balance:Number(order.credits||0),totalPurchased:Number(order.credits||0)},$set:{updatedAt:new Date(),initialGranted:true,weeklyEnabled:true,lastGrantAt:new Date()}},
-    {upsert:true}
-   );
+   const existingCredit=await db.collection("credits").findOne({userId:order.userId});
+   if(existingCredit){
+    await db.collection("credits").updateOne(
+     {userId:order.userId},
+     {$inc:{balance:Number(order.credits||0),totalPurchased:Number(order.credits||0)},$set:{updatedAt:new Date(),initialGranted:true,weeklyEnabled:existingCredit.weeklyEnabled!==false}}
+    );
+   }else{
+    await db.collection("credits").insertOne({
+     userId:order.userId,
+     balance:25+Number(order.credits||0),
+     weeklyGranted:25,
+     lastGrantAt:new Date(),
+     totalPurchased:Number(order.credits||0),
+     totalSpent:0,
+     initialGranted:true,
+     weeklyEnabled:true,
+     updatedAt:new Date()
+    });
+   }
    await db.collection("credit_orders").updateOne(
     {_id:order._id,credited:{$ne:true}},
     {$set:{credited:true,status:payload.status,paidAt:new Date(),updatedAt:new Date(),paymentAmount:payload.payment_amount,payerCurrency:payload.payer_currency,txid:payload.txid||""}}
