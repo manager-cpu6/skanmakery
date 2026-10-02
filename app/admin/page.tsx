@@ -19,7 +19,7 @@ export default async function Admin(){
   db.collection("scan_campaigns").aggregate([{$group:{_id:null,total:{$sum:{$ifNull:["$locations",0]}}}}]).toArray()
  ]);
  const qrScans=qrAgg[0]?.total||0,views=scanAgg[0]?.total||0,captures=captureAgg[0]?.total||0,locations=locationAgg[0]?.total||0;
- const nav=[["Overview","/admin","◈"],["Users","/admin/users","♙"],["QR Codes","/admin/qrs","▦"],["Scans","/admin/scans","⌁"],["Videos","/admin/videos","▶"],["OTP / Email","/admin/otp","✉"],["Settings","/admin/settings","⚙"]];
+ const nav=[["Overview","/admin","◈"],["Users","/admin/users","♙"],["Credits","/admin/credits","⚡"],["QR Codes","/admin/qrs","▦"],["Scans","/admin/scans","⌁"],["Videos","/admin/videos","▶"],["OTP / Email","/admin/otp","✉"],["Settings","/admin/settings","⚙"]];
  return <div className="admin-shell">
   <aside className="admin-sidebar"><Link href="/admin" className="admin-brand">Skan<span>Makery</span><small>CONTROL CENTER</small></Link><div className="admin-status"><i/> SYSTEM ONLINE <span>2026</span></div><nav>{nav.map(([label,href,icon])=><Link key={href} href={href} className={href==="/admin"?"active":""}><b>{icon}</b><span>{label}</span></Link>)}</nav><div className="admin-side-bottom"><Link href="/dashboard">↩ User workspace</Link><small>Protected administrator area</small></div></aside>
   <main className="admin-main">
@@ -37,7 +37,7 @@ export default async function Admin(){
    </section>
    <div className="admin-content-grid">
     <section className="admin-panel"><div className="admin-panel-head"><div><span>OPERATIONS</span><h2>Management modules</h2></div><small>Direct access</small></div><div className="admin-module-grid">
-     <Link href="/admin/users"><b>♙</b><div><strong>Users</strong><small>Accounts, status and records</small></div><em>→</em></Link>
+     <Link href="/admin/users"><b>♙</b><div><strong>Users</strong><small>Accounts, status and records</small></div><em>→</em></Link><Link href="/admin/credits"><b>⚡</b><div><strong>Credits</strong><small>Balances, grants and Cryptomus payments</small></div><em>→</em></Link>
      <Link href="/admin/qrs"><b>▦</b><div><strong>QR Codes</strong><small>Owners, types and scan counts</small></div><em>→</em></Link>
      <Link href="/admin/scans"><b>⌁</b><div><strong>Scan Center</strong><small>Location, photo and video campaigns</small></div><em>→</em></Link>
      <Link href="/admin/videos"><b>▶</b><div><strong>Video Studio</strong><small>Feed, profile, likes and publishing</small></div><em>→</em></Link>
