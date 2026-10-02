@@ -9,7 +9,7 @@ export async function makeQrDataUrl(value:string,design:any={}){
  if(logo&&logo.length<700000){
   let svg=await QRCode.toString(value,{type:"svg",width:1200,margin:4,errorCorrectionLevel:"H",color:{dark,light}});
   const safeLogo=logo.replace(/"/g,"&quot;").replace(/</g,"").replace(/>/g,"");
-  const overlay="<g class=\"skanmakery-logo\"><circle cx=\"600\" cy=\"600\" r=\"118\" fill=\"#ffffff\"/><image href=\""+safeLogo+"\" x=\"500\" y=\"500\" width=\"200\" height=\"200\" preserveAspectRatio=\"xMidYMid meet\"/></g>";
+  const overlay="<defs><clipPath id=\"skanmakeryLogoClip\"><circle cx=\"600\" cy=\"600\" r=\"92\"/></clipPath></defs><g class=\"skanmakery-logo\"><circle cx=\"600\" cy=\"600\" r=\"122\" fill=\"#ffffff\" stroke=\"#ffffff\" stroke-width=\"8\"/><image href=\""+safeLogo+"\" x=\"508\" y=\"508\" width=\"184\" height=\"184\" clip-path=\"url(#skanmakeryLogoClip)\" preserveAspectRatio=\"xMidYMid slice\"/></g>";
   svg=svg.replace("</svg>",overlay+"</svg>");
   return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
  }
