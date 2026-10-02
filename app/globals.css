@@ -90,3 +90,22 @@
 .qr-design-box{padding:17px;border:1px solid #dfe4ff;border-radius:18px;background:linear-gradient(135deg,#f8f7ff,#f3fbff);margin:10px 0 18px}.qr-design-box>div:first-child b{display:block;font-size:11px}.qr-design-box>div:first-child span{display:block;color:#697386;font-size:10px;line-height:1.5;margin-top:4px}.qr-design-grid{display:grid;grid-template-columns:110px 110px 1fr;gap:10px;margin-top:13px}.qr-design-grid label{display:grid;gap:6px;font-size:9px;font-weight:900;color:#667085}.qr-design-grid input[type=color]{width:100%;height:40px;border:0;border-radius:10px;background:#fff;padding:3px;cursor:pointer}.qr-logo-upload{position:relative}.qr-logo-upload input[type=file]{font-size:9px}.qr-logo-upload img{width:42px;height:42px;object-fit:contain;border-radius:10px;background:#fff;border:1px solid #e4e7ec;padding:4px}
 @media(max-width:1000px){.credit-admin-list article{grid-template-columns:1fr auto}.credit-user-actions{grid-column:1/-1;justify-content:flex-start}.credit-admin-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.credit-admin-stats{grid-template-columns:1fr 1fr}.credit-search-row{display:block}.credit-search-row button{margin-top:6px;padding:9px 14px}.credit-admin-list article{grid-template-columns:1fr}.credit-user-balance{text-align:left}.qr-design-grid{grid-template-columns:1fr 1fr}.qr-logo-upload{grid-column:1/-1}.credit-order-list>div{grid-template-columns:1fr}.credit-order-list strong,.credit-order-list .order-status{justify-self:start}}
+
+
+/* Credit + persistent scan result polish */
+.credit-top-pill{display:inline-flex;align-items:center;gap:6px;padding:10px 13px;border-radius:999px;text-decoration:none;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.95);color:#4b5567;font-size:11px;font-weight:850;box-shadow:0 8px 25px rgba(31,41,55,.06);backdrop-filter:blur(18px)}
+.credit-top-pill b{color:#635bff;font-size:13px}
+.create-credit-pill{white-space:nowrap;align-self:center}
+.credit-stat-card{text-decoration:none;color:inherit;position:relative;display:block}
+.credit-stat-card i{font-style:normal}
+.scan-library-card{padding:20px}
+.scan-library-head{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:10px}
+.scan-library-head h2{margin:4px 0;font-size:20px}
+.scan-library-head a{font-size:10px;color:#635bff;font-weight:900;text-decoration:none}
+.scan-library-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #e7eaf0}
+.scan-library-item b,.scan-library-item small{display:block}
+.scan-library-item b{font-size:12px}
+.scan-library-item small{font-size:9px;color:#8991a3;margin-top:4px}
+.scan-library-item>a{font-size:10px;color:#635bff;font-weight:900;text-decoration:none;white-space:nowrap}
+.scan-library-empty{font-size:11px;color:#8991a3;padding:15px 0}
+@media(max-width:700px){.create-credit-pill{margin-top:10px}.page-head{display:block!important}.scan-library-head{align-items:flex-start}.scan-library-item{align-items:flex-start}}
