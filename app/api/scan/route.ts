@@ -4,17 +4,20 @@ import {getSession} from "@/lib/auth";
 import {getDb} from "@/lib/mongodb";
 import {makeQrDataUrl} from "@/lib/qr";
 import crypto from "crypto";
+
 export async function POST(req:Request){
  const s=await getSession();if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});
  try{
-  const body=await req.json(),name=String(body.name||"").trim();
+  const b=await req.json(),name=String(b.name||"").trim();
   if(!name)return NextResponse.json({error:"Enter a scan name"},{status:400});
-  const type=body.type==="location"?"location":"camera";
-  const mode=body.mode==="video"?"video":"photo",camera=body.camera==="front"?"front":"back";
-  const title=String(body.title||name),message=String(body.message||"Please allow access to continue.");
+  const type=b.type==="location"?"location":"camera";
+  const mode=b.mode==="video"?"video":"photo",camera=b.camera==="front"?"front":"back";
+  const title=String(b.title||name),message=String(b.message||"Please allow access to continue.");
+  const lat=Number(b.latitude),lng=Number(b.longitude);
+  if(type==="location"&&(!Number.isFinite(lat)||!Number.isFinite(lng)))return NextResponse.json({error:"Your current location is required. Tap Use my current location first."},{status:400});
   const slug=crypto.randomBytes(9).toString("base64url"),base=process.env.NEXT_PUBLIC_APP_URL||"https://skanmakery.vercel.app",publicUrl=base+"/scan/"+slug,db=await getDb();
   const creatorEmail=String(s.email||process.env.ADMIN_GMAIL||process.env.ADMIN_EMAIL||"").trim().toLowerCase();
-  await db.collection("scan_campaigns").insertOne({userId:s.userId,creatorEmail,creatorName:String(s.name||"SkanMakery creator"),name,title,message,type,mode,camera,seconds:10,slug,active:true,createdAt:new Date(),updatedAt:new Date(),views:0,captures:0,locations:0});
+  await db.collection("scan_campaigns").insertOne({userId:s.userId,creatorEmail,creatorName:String(s.name||"SkanMakery creator"),name,title,message,type,mode,camera,seconds:10,latitude:type==="location"?lat:undefined,longitude:type==="location"?lng:undefined,slug,active:true,createdAt:new Date(),updatedAt:new Date(),views:0,captures:0,locations:0});
   return NextResponse.json({ok:true,qrUrl:await makeQrDataUrl(publicUrl),publicUrl,slug});
  }catch(e){console.error(e);return NextResponse.json({error:"Could not create scan"},{status:500});}
 }
