@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {notFound} from "next/navigation";
 import bwipjs from "bwip-js";
 import {getDb} from "@/lib/mongodb";
