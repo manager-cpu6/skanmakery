@@ -41,7 +41,7 @@ export default function Create(){
   if(maker==="barcode"){const r=await fetch("/api/barcode",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,value,format:barcodeFormat})});const d=await r.json();if(!r.ok){setError(d.error||"Could not create barcode");return}setBarcodeImage(d.image);setPublicUrl(d.publicUrl);return;}
   if(type==="location"||type==="prank"){
    if(type==="location"&&!location){setError("First allow location access and select your current location.");return}
-   const r=await fetch("/api/scan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,title:type==="location"?(name+" location request"):(cameraTitle||name),message:type==="location"?"Continue only if you want to share your device location with the scan creator.":cameraMessage,type:type==="location"?"location":"camera",mode:prankMode,camera:cameraFacing})});
+   const r=await fetch("/api/scan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,title:type==="location"?(name+" location request"):(cameraTitle||name),message:type==="location"?"This QR opens the exact location selected by the creator. Visitors are not asked for their own location.":cameraMessage,type:type==="location"?"location":"camera",mode:prankMode,camera:type==="location"?"back":cameraFacing,latitude:type==="location"?location.latitude:undefined,longitude:type==="location"?location.longitude:undefined,accuracy:type==="location"?location.accuracy:undefined})});
    const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}setQr(d.qrUrl);setPublicUrl(d.publicUrl);return;
   }
   let uploadedValue=value;
