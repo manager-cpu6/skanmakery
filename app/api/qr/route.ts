@@ -25,6 +25,7 @@ export async function POST(req:Request){
   if(mediaTypes.includes(type)&&!String(value||"").trim())return NextResponse.json({error:"Upload or provide your media first."},{status:400});
   if(type==="url"&&!value)return NextResponse.json({error:"Enter a website URL"},{status:400});
   if(type==="phone"&&!form.phone)return NextResponse.json({error:"Enter a phone number"},{status:400});
+  const db=await getDb();
   const credit=await db.collection("credits").findOne({userId:s.userId});if(!credit||Number(credit.balance||0)<1)return NextResponse.json({error:"You need 1 credit to create a QR code."},{status:402});
   const slug=crypto.randomBytes(5).toString("base64url"),base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000",qrUrl=base+"/q/"+slug,db=await getDb();
   await db.collection("credits").updateOne({userId:s.userId},{$inc:{balance:-1,totalSpent:1},$set:{updatedAt:new Date()}});
