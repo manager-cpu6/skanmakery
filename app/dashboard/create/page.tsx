@@ -11,7 +11,7 @@ const types=[
 const countries=[...PAYMENT_COUNTRIES,...EXTRA_PAYMENT_COUNTRIES];
 
 export default function Create(){
- const [type,setType]=useState("url"),[name,setName]=useState(""),[value,setValue]=useState("");
+ const [maker,setMaker]=useState<"qr"|"barcode">("qr"),[barcodeFormat,setBarcodeFormat]=useState("code128"),[barcodeImage,setBarcodeImage]=useState(""),[type,setType]=useState("url"),[name,setName]=useState(""),[value,setValue]=useState("");
  const [phone,setPhone]=useState(""),[country,setCountry]=useState("SO"),[provider,setProvider]=useState("zaad-usd");
  const [paymentEdit,setPaymentEdit]=useState(false),[paymentPrefix,setPaymentPrefix]=useState(""),[paymentMode,setPaymentMode]=useState<"direct"|"menu"|"custom">("direct"),[paymentTemplate,setPaymentTemplate]=useState("");
  const [wifiSsid,setWifiSsid]=useState(""),[wifiPassword,setWifiPassword]=useState(""),[wifiSecurity,setWifiSecurity]=useState("WPA"),[wifiHidden,setWifiHidden]=useState(false);
@@ -37,6 +37,7 @@ export default function Create(){
  }
  async function submit(e:React.FormEvent){
   e.preventDefault();setError("");
+  if(maker==="barcode"){const r=await fetch("/api/barcode",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,value,format:barcodeFormat})});const d=await r.json();if(!r.ok){setError(d.error||"Could not create barcode");return}setBarcodeImage(d.image);setPublicUrl(d.publicUrl);return;}
   if(type==="location"||type==="prank"){
    const r=await fetch("/api/scan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,title:type==="location"?(name+" location request"):(cameraTitle||name),message:type==="location"?"Continue only if you want to share your device location with the scan creator.":cameraMessage,type:type==="location"?"location":"camera",mode:prankMode,camera:cameraFacing})});
    const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}setQr(d.qrUrl);setPublicUrl(d.publicUrl);return;
@@ -69,7 +70,8 @@ export default function Create(){
   <aside className="side"><div className="brand">Skan<span>Makery</span></div><nav><a href="/dashboard">Dashboard</a><a className="nav-active" href="/dashboard/create">＋ Create QR</a><a href="/dashboard/qrs">My QR Codes</a></nav></aside>
   <main className="main">
    <div className="page-head"><div><span className="eyebrow">QR STUDIO</span><h1>Create something scannable</h1><p>Create QR experiences for payments, Wi‑Fi, camera capture, media and more.</p></div></div>
-   <div className="type-grid">{types.map(([id,icon,label])=><button type="button" className={"type-card "+(type===id?"active":"")} onClick={()=>setType(id)} key={id}><span>{icon}</span><b>{label}</b><small>{id==="url"?"Open a website":id==="ussd"?"Country + wallet + number":id.startsWith("camera-")?"Permission-based camera":"Create QR"}</small></button>)}</div>
+   <div className="maker-switch"><button type="button" className={maker==="qr"?"active":""} onClick={()=>setMaker("qr")}>▦ QR Code</button><button type="button" className={maker==="barcode"?"active":""} onClick={()=>setMaker("barcode")}>▥ Barcode</button></div>
+   {maker==="barcode"?<div className="studio"><form className="form" onSubmit={submit}><div className="payment-section-head"><div><b>▥ BARCODE STUDIO</b><span>Create a standard barcode for products, IDs, inventory and more.</span></div></div><div className="field"><label>Barcode name</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Product barcode" required/></div><div className="field"><label>Barcode type</label><select value={barcodeFormat} onChange={e=>setBarcodeFormat(e.target.value)}><option value="code128">Code 128 — general purpose</option><option value="ean13">EAN-13 — retail</option><option value="upca">UPC-A — retail</option><option value="code39">Code 39</option><option value="itf14">ITF-14</option></select></div><div className="field"><label>Value / number</label><input value={value} onChange={e=>setValue(e.target.value)} placeholder={barcodeFormat==="code128"?"Enter text or number":"Enter numbers only"} required/></div>{error&&<p className="error">{error}</p>}<button className="btn primary create-btn">Generate Barcode →</button></form>{barcodeImage&&<div className="result-card"><div className="success">✓ Barcode created</div><img className="barcode-image" src={barcodeImage} alt={name}/><p className="public-url">{publicUrl}</p><div className="result-actions"><a className="btn primary" href={barcodeImage} download={name+"-barcode.png"}>Download PNG</a><button className="btn light" onClick={()=>window.print()}>🖨 Print</button></div></div>}</div>:<><div className="type-grid">{types.map(([id,icon,label])=><button type="button" className={"type-card "+(type===id?"active":"")} onClick={()=>setType(id)} key={id}><span>{icon}</span><b>{label}</b><small>{id==="url"?"Open a website":id==="ussd"?"Country + wallet + number":id.startsWith("camera-")?"Permission-based camera":"Create QR"}</small></button>)}</div>
    <div className="studio"><form className="form" onSubmit={submit}>
     <div className="field"><label>QR Name</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. My Local Payment QR" required/></div>
     {type==="prank"?<>
@@ -110,7 +112,7 @@ export default function Create(){
     {error&&<p className="error">{error}</p>}<button className="btn primary create-btn">{type==="wifi"?"Generate Wi‑Fi QR →":(type==="prank")?"Create Camera QR →":"Generate QR →"}</button>
    </form>
    {qr&&<div className="result-card"><div className="success">✓ QR created</div><img className="qr-image" src={qr}/><p className="public-url">{publicUrl}</p>{type==="wifi"&&<p className="scan-hint">Scan directly with the phone camera or built-in QR scanner.</p>}<div className="result-actions"><a className="btn primary" href={publicUrl} target="_blank">Test Scan ↗</a><button className="btn light" onClick={()=>window.print()}>🖨 Print QR</button></div></div>}
-   </div>
+   </div></>}
   </main>
  </div>
 }
