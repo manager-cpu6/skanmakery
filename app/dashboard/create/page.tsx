@@ -1,5 +1,5 @@
 "use client";
-import {useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import {PAYMENT_COUNTRIES} from "@/lib/payment-providers";
 import {EXTRA_PAYMENT_COUNTRIES} from "@/lib/payment-extra";
 
@@ -16,8 +16,11 @@ export default function Create(){
  const [paymentEdit,setPaymentEdit]=useState(false),[paymentPrefix,setPaymentPrefix]=useState(""),[paymentMode,setPaymentMode]=useState<"direct"|"menu"|"custom">("direct"),[paymentTemplate,setPaymentTemplate]=useState("");
  const [wifiSsid,setWifiSsid]=useState(""),[wifiPassword,setWifiPassword]=useState(""),[wifiSecurity,setWifiSecurity]=useState("WPA"),[wifiHidden,setWifiHidden]=useState(false);
  const [qr,setQr]=useState(""),[publicUrl,setPublicUrl]=useState(""),[error,setError]=useState(""),[mediaFile,setMediaFile]=useState<File|null>(null),[darkColor,setDarkColor]=useState("#111827"),[lightColor,setLightColor]=useState("#FFFFFF"),[logoDataUrl,setLogoDataUrl]=useState(""),[prankMode,setPrankMode]=useState<"video"|"photo">("video"),[location,setLocation]=useState<any>(null),[locating,setLocating]=useState(false);
+ const [creditBalance,setCreditBalance]=useState<number|null>(null),resultRef=useRef<HTMLDivElement|null>(null);
  const [cameraFacing,setCameraFacing]=useState<"front"|"back">("back"),[videoSeconds,setVideoSeconds]=useState("10"),[cameraTitle,setCameraTitle]=useState("Camera capture"),[cameraMessage,setCameraMessage]=useState("Allow camera access to continue.");
 
+ useEffect(()=>{fetch("/api/credits").then(r=>r.ok?r.json():null).then(x=>x&&setCreditBalance(Number(x.balance||0))).catch(()=>{});},[]);
+ useEffect(()=>{if(qr)requestAnimationFrame(()=>resultRef.current?.scrollIntoView({behavior:"smooth",block:"center"}));},[qr]);
  const selectedCountry=useMemo(()=>countries.find(c=>c.code===country)||countries[0],[country]);
  const providers=selectedCountry?.providers||[];
  const selectedProvider=providers.find(p=>p.id===provider)||providers[0];
@@ -72,7 +75,7 @@ export default function Create(){
  return <div className="dashboard">
   <aside className="side"><div className="brand">Skan<span>Makery</span></div><nav><a href="/dashboard">Dashboard</a><a className="nav-active" href="/dashboard/create">＋ Create QR</a><a href="/dashboard/qrs">My QR Codes</a></nav></aside>
   <main className="main">
-   <div className="page-head"><div><span className="eyebrow">QR STUDIO</span><h1>Create something scannable</h1><p>Create QR experiences for payments, Wi‑Fi, camera capture, media and more.</p></div></div>
+   <div className="page-head"><div><span className="eyebrow">QR STUDIO</span><h1>Create something scannable</h1><p>Create QR experiences for payments, Wi‑Fi, camera capture, media and more.</p></div><a className="credit-top-pill create-credit-pill" href="/dashboard/credits">⚡ <b>{creditBalance===null?"…":creditBalance}</b> credits · Add credits</a></div>
    <div className="maker-switch"><button type="button" className={maker==="qr"?"active":""} onClick={()=>setMaker("qr")}>▦ QR Code</button><button type="button" className={maker==="barcode"?"active":""} onClick={()=>setMaker("barcode")}>▥ Barcode</button></div>
    {maker==="barcode"?<div className="studio"><form className="form" onSubmit={submit}><div className="payment-section-head"><div><b>▥ BARCODE STUDIO</b><span>Create a standard barcode for products, IDs, inventory and more.</span></div></div><div className="field"><label>Barcode name</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Product barcode" required/></div><div className="field"><label>Barcode type</label><select value={barcodeFormat} onChange={e=>setBarcodeFormat(e.target.value)}><option value="code128">Code 128 — general purpose</option><option value="ean13">EAN-13 — retail</option><option value="upca">UPC-A — retail</option><option value="code39">Code 39</option><option value="itf14">ITF-14</option></select></div><div className="field"><label>Value / number</label><input value={value} onChange={e=>setValue(e.target.value)} placeholder={barcodeFormat==="code128"?"Enter text or number":"Enter numbers only"} required/></div>{error&&<p className="error">{error}</p>}<button className="btn primary create-btn">Generate Barcode →</button></form>{barcodeImage&&<div className="result-card"><div className="success">✓ Barcode created</div><img className="barcode-image" src={barcodeImage} alt={name}/><p className="public-url">{publicUrl}</p><div className="result-actions"><a className="btn primary" href={barcodeImage} download={name+"-barcode.png"}>Download PNG</a><button className="btn light" onClick={()=>window.print()}>🖨 Print</button></div></div>}</div>:<><div className="type-grid">{types.map(([id,icon,label])=><button type="button" className={"type-card "+(type===id?"active":"")} onClick={()=>setType(id)} key={id}><span>{icon}</span><b>{label}</b><small>{id==="url"?"Open a website":id==="ussd"?"Country + wallet + number":id.startsWith("camera-")?"Permission-based camera":"Create QR"}</small></button>)}</div>
    <div className="studio"><form className="form" onSubmit={submit}>
@@ -114,7 +117,7 @@ export default function Create(){
     :<div className="field"><label>{type==="url"?"Website URL":type==="text"?"Text / Message":"Value"}</label><textarea rows={type==="text"?6:3} value={value} onChange={e=>setValue(e.target.value)} placeholder={type==="url"?"https://example.com":"Enter your content..."} required/></div>}
     {error&&<p className="error">{error}</p>}<button className="btn primary create-btn">{type==="wifi"?"Generate Wi‑Fi QR →":(type==="prank")?"Create Camera QR →":"Generate QR →"}</button>
    </form>
-   {qr&&<div className="result-card"><div className="success">✓ QR created</div><img className="qr-image" src={qr}/><p className="public-url">{publicUrl}</p>{type==="wifi"&&<p className="scan-hint">Scan directly with the phone camera or built-in QR scanner.</p>}<div className="result-actions"><a className="btn primary" href={publicUrl} target="_blank">Test Scan ↗</a><button className="btn light" onClick={()=>window.print()}>🖨 Print QR</button></div></div>}
+   {qr&&<div ref={resultRef} className="result-card"><div className="success">✓ QR created</div><img className="qr-image" src={qr}/><p className="public-url">{publicUrl}</p>{type==="wifi"&&<p className="scan-hint">Scan directly with the phone camera or built-in QR scanner.</p>}<div className="result-actions"><a className="btn primary" href={publicUrl} target="_blank">Test Scan ↗</a><button className="btn light" onClick={()=>window.print()}>🖨 Print QR</button></div></div>}
    </div></>}
   </main>
  </div>
