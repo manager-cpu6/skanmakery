@@ -42,6 +42,7 @@ export default function Create(){
    const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}setQr(d.qrUrl);setPublicUrl(d.publicUrl);return;
   }
   let uploadedValue=value;
+  if(["video","image","audio","pdf","file","gallery"].includes(type)&&!mediaFile&&!value.trim()){setError("Please upload a file from your phone/computer or provide a direct URL.");return;}
   if(["video","image","audio","pdf","file","gallery"].includes(type)&&mediaFile){
    const fd=new FormData();fd.append("file",mediaFile);fd.append("kind","scan-content");
    const up=await fetch("/api/media/upload",{method:"POST",body:fd});const ux=await up.json();
@@ -79,7 +80,7 @@ export default function Create(){
       <div className="field"><label>Camera</label><select value={cameraFacing} onChange={e=>setCameraFacing(e.target.value as "front"|"back")}><option value="back">Back camera</option><option value="front">Front camera</option></select></div>
       <div className="wifi-note"><span>🔐</span><div><b>Explicit browser permission</b><p>The visitor must continue and grant camera access before capture begins.</p></div></div>
     </>:type==="video"||type==="image"||type==="audio"||type==="pdf"||type==="file"||type==="gallery"?<>
-      <div className="field"><label>Upload from phone / computer</label><input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,application/zip" onChange={e=>setMediaFile(e.target.files?.[0]||null)}/><small className="helper">Upload the media directly. Maximum 100MB.</small></div>
+      <div className="field"><label>{type==="video"?"Choose a video":type==="image"?"Choose a photo/image":"Choose your file"}</label><input type="file" accept={type==="video"?"video/*":type==="image"?"image/*":type==="audio"?"audio/*":type==="pdf"?"application/pdf":type==="gallery"?"image/*":"*/*"} onChange={e=>setMediaFile(e.target.files?.[0]||null)} required={!value.trim()}/><small className="helper">{mediaFile?"Selected: "+mediaFile.name:"Tap to choose from your phone or computer. Required unless you enter a direct URL."} · Max 100MB.</small></div>
       <div className="field"><label>Or direct URL</label><input value={value} onChange={e=>setValue(e.target.value)} placeholder="https://…"/></div>
     </>:type==="ussd"?<>
       <div className="payment-section-head"><div><b>🌍 Local payment</b><span>Choose a country and payment service.</span></div></div>
