@@ -46,7 +46,7 @@ export default function Create(){
   if(type==="location"||type==="prank"){
    if(type==="location"&&!location){setError("First allow location access and select your current location.");return}
    const r=await fetch("/api/scan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,title:type==="location"?(name+" location request"):(cameraTitle||name),message:type==="location"?"This QR opens the exact location selected by the creator. Visitors are not asked for their own location.":cameraMessage,type:type==="location"?"location":"camera",mode:prankMode,camera:type==="location"?"back":cameraFacing,latitude:type==="location"?location.latitude:undefined,longitude:type==="location"?location.longitude:undefined,accuracy:type==="location"?location.accuracy:undefined,design:{dark:darkColor,light:lightColor,logoDataUrl}})});
-   const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}setQr(d.qrUrl);setPublicUrl(d.publicUrl);return;
+   const d=await r.json();if(!r.ok){setError(d.error||"Failed");return}setQr(d.qrUrl);setPublicUrl(d.publicUrl);if(typeof d.creditsLeft==="number")setCreditBalance(d.creditsLeft);return;
   }
   let uploadedValue=value;
   if(["video","image","audio","pdf","file","gallery"].includes(type)&&!mediaFile&&!value.trim()){setError("Please upload a file from your phone/computer or provide a direct URL.");return;}
