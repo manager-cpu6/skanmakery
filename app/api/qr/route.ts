@@ -25,10 +25,12 @@ export async function POST(req:Request){
   if(mediaTypes.includes(type)&&!String(value||"").trim())return NextResponse.json({error:"Upload or provide your media first."},{status:400});
   if(type==="url"&&!value)return NextResponse.json({error:"Enter a website URL"},{status:400});
   if(type==="phone"&&!form.phone)return NextResponse.json({error:"Enter a phone number"},{status:400});
+  const credit=await db.collection("credits").findOne({userId:s.userId});if(!credit||Number(credit.balance||0)<1)return NextResponse.json({error:"You need 1 credit to create a QR code."},{status:402});
   const slug=crypto.randomBytes(5).toString("base64url"),base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000",qrUrl=base+"/q/"+slug,db=await getDb();
+  await db.collection("credits").updateOne({userId:s.userId},{$inc:{balance:-1,totalSpent:1},$set:{updatedAt:new Date()}});
   const target=type==="ussd"?"ussd-payment":makeTarget(type,form);
   const qrPayload=type==="wifi"?target:qrUrl;
   await db.collection("qrcodes").insertOne({userId:s.userId,name,type,slug,target,qrUrl,qrPayload,active:true,scanCount:0,mediaUrl:mediaTypes.includes(type)?String(value||""):undefined,createdAt:new Date(),updatedAt:new Date(),wifiSsid:type==="wifi"?String(wifiSsid||""):undefined,wifiSecurity:type==="wifi"?String(wifiSecurity||"WPA"):undefined,wifiHidden:type==="wifi"?Boolean(wifiHidden):undefined,paymentCountry:type==="ussd"?paymentCountry:undefined,paymentProvider:type==="ussd"?paymentProvider:undefined,paymentPrefix:type==="ussd"?paymentPrefix:undefined,paymentMode:type==="ussd"?(paymentMode||"menu"):undefined,paymentTemplate:type==="ussd"?String(paymentTemplate||""):undefined,currency:type==="ussd"?paymentCurrency:undefined,paymentNumber:type==="ussd"?String(phone||"").replace(/\D/g,""):undefined});
-  return NextResponse.json({ok:true,qrUrl:await makeQrDataUrl(qrPayload),publicUrl:qrUrl,payloadType:type==="wifi"?"wifi":"dynamic"});
+  return NextResponse.json({ok:true,qrUrl:await makeQrDataUrl(qrPayload),publicUrl:qrUrl,payloadType:type==="wifi"?"wifi":"dynamic",creditsLeft:Number(credit.balance)-1});
  }catch(e){console.error(e);return NextResponse.json({error:"Could not create QR"},{status:500});}
 }
